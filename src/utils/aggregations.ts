@@ -67,8 +67,6 @@ export function buildCategoryDrilldownSankey(rows: Tx[], category: string) {
   const byLabel = buildBreakdownByKey(expenses, (row) => normalizedToken(row.label));
   const byPurpose = buildBreakdownByKey(expenses, (row) => normalizedToken(row.purpose));
 
-  // Prefer Bezeichnung/label breakdown, but if label collapses to one bucket (e.g. all "Ausgabe"),
-  // fallback to purpose so the drilldown still reveals meaningful subcategories.
   const usePurposeFallback = byLabel.size <= 1 && byPurpose.size > 1;
   const breakdown = usePurposeFallback ? byPurpose : byLabel;
 
@@ -79,6 +77,27 @@ export function buildCategoryDrilldownSankey(rows: Tx[], category: string) {
     const target = `${label}`;
     nodes.push({ name: target });
     links.push({ source: category, target, value });
+  });
+
+  return { nodes, links };
+}
+
+export function buildIncomeDrilldownSankey(rows: Tx[], category: string) {
+  const incomeRows = rows.filter((row) => row.type === 'Income' && row.category === category);
+
+  const byLabel = buildBreakdownByKey(incomeRows, (row) => normalizedToken(row.label));
+  const byPurpose = buildBreakdownByKey(incomeRows, (row) => normalizedToken(row.purpose));
+
+  const usePurposeFallback = byLabel.size <= 1 && byPurpose.size > 1;
+  const breakdown = usePurposeFallback ? byPurpose : byLabel;
+
+  const rightNode = `Income · ${category}`;
+  const nodes = [{ name: rightNode }];
+  const links: { source: string; target: string; value: number }[] = [];
+
+  topNGrouped(breakdown, 20).forEach(([label, value]) => {
+    nodes.push({ name: label });
+    links.push({ source: label, target: rightNode, value });
   });
 
   return { nodes, links };

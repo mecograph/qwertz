@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen bg-slate-50 text-slate-900">
-    <div class="flex min-h-screen">
-      <aside class="hidden w-60 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
+  <div class="h-screen overflow-hidden bg-slate-50 text-slate-900">
+    <div class="flex h-full">
+      <aside class="hidden h-screen w-60 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
         <div class="border-b border-slate-200 px-4 py-4">
           <p class="text-sm font-semibold">Transaction Analyzer</p>
           <p class="mt-1 text-xs text-slate-500">Linear × PostHog style</p>
         </div>
 
-        <nav class="flex-1 space-y-1 p-2">
+        <nav class="flex-1 space-y-1 p-2 overflow-auto">
           <button
             v-for="item in primaryTabs"
             :key="item"
@@ -19,7 +19,7 @@
           </button>
         </nav>
 
-        <div class="border-t border-slate-200 p-2">
+        <div class="mt-auto border-t border-slate-200 p-2">
           <button
             class="w-full rounded-md px-3 py-2 text-left text-sm"
             :class="ui.tab === 'Settings' ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-slate-600 hover:bg-slate-100'"

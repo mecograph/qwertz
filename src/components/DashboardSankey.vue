@@ -3,9 +3,9 @@
     <div class="flex items-center justify-between gap-3">
       <div>
         <h2 class="text-lg font-semibold">Dashboard Sankey</h2>
-        <p class="text-xs text-slate-500">Income categories flow into Budget, then Budget flows to spending categories. Click a spending category (or Budget → category link) to drill down.</p>
+        <p class="text-xs text-slate-500">Income categories flow into Budget, then Budget flows to spending categories. Click categories (or links) to drill down.</p>
       </div>
-      <button v-if="selectedCategory" class="rounded-md border border-slate-300 px-3 py-1.5 text-sm" @click="selectedCategory = ''">
+      <button v-if="selectedCategory" class="rounded-md border border-slate-300 px-3 py-1.5 text-sm" @click="clearDrilldown">
         Back to Budget view
       </button>
     </div>
@@ -24,11 +24,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import VChart from 'vue-echarts';
-import { buildBudgetSankey, buildCategoryDrilldownSankey, computeKpis } from '../utils/aggregations';
+import { buildBudgetSankey, buildCategoryDrilldownSankey, buildIncomeDrilldownSankey, computeKpis } from '../utils/aggregations';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 
 const tx = useTransactionsStore();
 const selectedCategory = ref('');
+const drillType = ref<'' | 'income' | 'expense'>('');
 
 const kpis = computed(() => computeKpis(tx.rows));
 const kpisList = computed(() => [
@@ -36,13 +37,18 @@ const kpisList = computed(() => [
   { label: 'Expenses', value: kpis.value.expenses.toFixed(2) },
   { label: 'Net', value: kpis.value.net.toFixed(2) },
   { label: 'Transactions', value: kpis.value.txCount },
-  { label: selectedCategory.value ? 'Drilldown' : 'Top category', value: selectedCategory.value || kpis.value.topCategory },
+  {
+    label: selectedCategory.value ? `Drilldown (${drillType.value || 'category'})` : 'Top category',
+    value: selectedCategory.value || kpis.value.topCategory,
+  },
 ]);
 
 const option = computed(() => {
-  const sankey = selectedCategory.value
-    ? buildCategoryDrilldownSankey(tx.rows, selectedCategory.value)
-    : buildBudgetSankey(tx.rows);
+  const sankey = !selectedCategory.value
+    ? buildBudgetSankey(tx.rows)
+    : drillType.value === 'income'
+      ? buildIncomeDrilldownSankey(tx.rows, selectedCategory.value)
+      : buildCategoryDrilldownSankey(tx.rows, selectedCategory.value);
 
   return {
     tooltip: {
@@ -65,20 +71,44 @@ const option = computed(() => {
   };
 });
 
+function clearDrilldown() {
+  selectedCategory.value = '';
+  drillType.value = '';
+}
+
 function onChartClick(params: { dataType?: string; name?: string; data?: { source?: string; target?: string } }) {
   if (selectedCategory.value) return;
 
-  let candidate = '';
+  const name = params.name ?? '';
 
   if (params.dataType === 'node') {
-    candidate = params.name ?? '';
+    if (name.startsWith('Income · ')) {
+      selectedCategory.value = name.replace(/^Income ·\s*/, '');
+      drillType.value = 'income';
+      return;
+    }
+
+    if (name && name !== 'Budget' && name !== 'Other') {
+      selectedCategory.value = name;
+      drillType.value = 'expense';
+      return;
+    }
   }
 
-  if ((params.dataType === 'edge' || params.dataType === 'link') && params.data?.source === 'Budget') {
-    candidate = params.data.target ?? '';
-  }
+  if (params.dataType === 'edge' || params.dataType === 'link') {
+    const source = params.data?.source ?? '';
+    const target = params.data?.target ?? '';
 
-  if (!candidate || candidate === 'Budget' || candidate === 'Other' || candidate.startsWith('Income ·')) return;
-  selectedCategory.value = candidate;
+    if (source === 'Budget' && target && target !== 'Other') {
+      selectedCategory.value = target;
+      drillType.value = 'expense';
+      return;
+    }
+
+    if (target === 'Budget' && source.startsWith('Income · ')) {
+      selectedCategory.value = source.replace(/^Income ·\s*/, '');
+      drillType.value = 'income';
+    }
+  }
 }
 </script>
