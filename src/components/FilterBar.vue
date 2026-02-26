@@ -1,93 +1,80 @@
 <template>
-  <div :class="compact ? 'rounded-lg border border-slate-200 bg-white p-2' : 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm'">
-    <div class="flex flex-wrap items-center gap-2" :class="compact ? 'justify-end' : 'justify-between mb-3'">
-      <h2 v-if="!compact" class="text-sm font-semibold tracking-wide text-slate-700">Slicers</h2>
-      <button class="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50" @click="resetToLatestYear">Reset filters</button>
-    </div>
+  <div class="flex justify-end">
+    <div class="relative flex items-center gap-2">
+      <button class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50" @click="toggleDatePopover">
+        {{ dateSummary }}
+      </button>
+      <button class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50" @click="toggleFilterPopover">
+        Filter
+      </button>
+      <button class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-50" @click="resetToLatestYear">Reset</button>
 
-    <div class="grid gap-2" :class="compact ? 'grid-cols-1 md:grid-cols-6' : 'md:grid-cols-6'">
-      <div :class="compact ? 'md:col-span-2' : 'md:col-span-2'">
-        <label class="mb-1 block text-xs font-medium text-slate-600">Time</label>
-        <div class="flex flex-wrap gap-1">
-          <button
-            v-for="item in granularities"
-            :key="item"
-            class="rounded-md border px-2 py-1 text-xs"
-            :class="filters.timeGranularity === item ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-300 text-slate-600'"
-            @click="filters.timeGranularity = item"
-          >
-            {{ item }}
+      <div v-if="showDatePopover" class="absolute right-0 top-11 z-40 w-[28rem] rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+        <p class="text-xs font-semibold text-slate-600">Date range</p>
+        <div class="mt-2 grid grid-cols-2 gap-2">
+          <button v-for="preset in presets" :key="preset.label" class="rounded border border-slate-200 px-2 py-1 text-left text-xs hover:bg-slate-50" @click="applyPreset(preset.days)">
+            {{ preset.label }}
           </button>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <label class="text-xs text-slate-600">Start
+            <input type="date" v-model="filters.startDate" class="mt-1 w-full rounded border border-slate-300 p-1.5 text-sm" />
+          </label>
+          <label class="text-xs text-slate-600">End
+            <input type="date" v-model="filters.endDate" class="mt-1 w-full rounded border border-slate-300 p-1.5 text-sm" />
+          </label>
         </div>
       </div>
 
-      <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Year</label>
-        <select class="w-full rounded-md border border-slate-300 p-2 text-sm" v-model="filters.selectedYear">
-          <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-        </select>
+      <div v-if="showFilterPopover" class="absolute right-0 top-11 z-40 w-[22rem] rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+        <p class="text-xs font-semibold text-slate-600">Add Filter...</p>
+        <div class="mt-2 space-y-2">
+          <label class="text-xs text-slate-600">Type
+            <select class="mt-1 w-full rounded border border-slate-300 p-2 text-sm" v-model="filters.type">
+              <option value="">Expense + Income</option>
+              <option value="Expense">Expense</option>
+              <option value="Income">Income</option>
+              <option value="Neutral">Neutral</option>
+            </select>
+          </label>
+          <label class="text-xs text-slate-600">Year
+            <select class="mt-1 w-full rounded border border-slate-300 p-2 text-sm" v-model="filters.selectedYear">
+              <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+            </select>
+          </label>
+          <label class="text-xs text-slate-600">Month
+            <select class="mt-1 w-full rounded border border-slate-300 p-2 text-sm" v-model="filters.selectedMonth">
+              <option value="">All</option>
+              <option v-for="month in months" :key="month" :value="month">{{ month }}</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" v-model="filters.includeNeutral" class="rounded border-slate-300" /> Include Neutral
+          </label>
+        </div>
       </div>
-
-      <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Month</label>
-        <select class="w-full rounded-md border border-slate-300 p-2 text-sm" v-model="filters.selectedMonth">
-          <option value="">All</option>
-          <option v-for="month in months" :key="month" :value="month">{{ month }}</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Type</label>
-        <select class="w-full rounded-md border border-slate-300 p-2 text-sm" v-model="filters.type" aria-label="Type slicer">
-          <option value="">Expense + Income</option>
-          <option value="Expense">Expense</option>
-          <option value="Income">Income</option>
-          <option value="Neutral">Neutral</option>
-        </select>
-      </div>
-
-      <label class="flex items-center gap-2 pt-5 text-sm text-slate-700">
-        <input type="checkbox" v-model="filters.includeNeutral" class="rounded border-slate-300" />
-        Include Neutral
-      </label>
-    </div>
-
-    <div v-if="!compact" class="mt-3 grid gap-3 md:grid-cols-2">
-      <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Category slicer</label>
-        <select multiple class="h-24 w-full rounded-md border border-slate-300 p-2 text-sm" v-model="filters.categories">
-          <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-        </select>
-      </div>
-      <div>
-        <label class="mb-1 block text-xs font-medium text-slate-600">Bezeichnung slicer</label>
-        <select multiple class="h-24 w-full rounded-md border border-slate-300 p-2 text-sm" v-model="filters.labels">
-          <option v-for="label in labels" :key="label" :value="label">{{ label }}</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="mt-2 flex flex-wrap gap-1">
-      <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-if="filters.type">Type: {{ filters.type }}</span>
-      <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-for="category in filters.categories" :key="`c-${category}`">{{ category }}</span>
-      <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-for="label in filters.labels" :key="`l-${label}`">{{ label }}</span>
-      <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-if="filters.selectedMonth">Month: {{ filters.selectedMonth }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 
-withDefaults(defineProps<{ compact?: boolean }>(), {
-  compact: false,
-});
 
+const _props = withDefaults(defineProps<{ compact?: boolean }>(), { compact: true });
 const filters = useFilterStore();
 const tx = useTransactionsStore();
-const granularities = ['Year', 'Month', 'ISO Week', 'Day', 'Custom'] as const;
+const showFilterPopover = ref(false);
+const showDatePopover = ref(false);
+
+const presets = [
+  { label: 'Last 7 days', days: 7 },
+  { label: 'Last 28 days', days: 28 },
+  { label: 'Last 30 days', days: 30 },
+  { label: 'This month', days: 0 },
+];
 
 const years = computed(() => {
   const set = new Set(tx.rows.map((row) => row.date.slice(0, 4)));
@@ -104,8 +91,12 @@ const months = computed(() => {
   return [...set].sort();
 });
 
-const categories = computed(() => [...new Set(tx.rows.map((row) => row.category))].sort());
-const labels = computed(() => [...new Set(tx.rows.map((row) => row.label))].sort());
+const dateSummary = computed(() => {
+  if (filters.startDate && filters.endDate) return `${filters.startDate} – ${filters.endDate}`;
+  if (filters.selectedMonth) return filters.selectedMonth;
+  if (filters.selectedYear) return filters.selectedYear;
+  return 'Date';
+});
 
 watchEffect(() => {
   if (!filters.selectedYear && years.value.length) filters.selectedYear = years.value[0];
@@ -114,5 +105,32 @@ watchEffect(() => {
 function resetToLatestYear() {
   filters.reset();
   if (years.value.length) filters.selectedYear = years.value[0];
+  showFilterPopover.value = false;
+  showDatePopover.value = false;
+}
+
+function toggleFilterPopover() {
+  showFilterPopover.value = !showFilterPopover.value;
+  if (showFilterPopover.value) showDatePopover.value = false;
+}
+
+function toggleDatePopover() {
+  showDatePopover.value = !showDatePopover.value;
+  if (showDatePopover.value) showFilterPopover.value = false;
+}
+
+function applyPreset(days: number) {
+  const now = new Date();
+  const end = new Date(now);
+  if (days === 0) {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    filters.startDate = start.toISOString().slice(0, 10);
+    filters.endDate = end.toISOString().slice(0, 10);
+    return;
+  }
+  const start = new Date(now);
+  start.setDate(start.getDate() - days + 1);
+  filters.startDate = start.toISOString().slice(0, 10);
+  filters.endDate = end.toISOString().slice(0, 10);
 }
 </script>

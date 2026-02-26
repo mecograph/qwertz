@@ -13,6 +13,8 @@ export const useFilterStore = defineStore('filters', {
     timeGranularity: 'Year' as TimeGranularity,
     selectedYear: '' as string,
     selectedMonth: '' as string,
+    startDate: '' as string,
+    endDate: '' as string,
   }),
   actions: {
     reset() {
@@ -23,6 +25,8 @@ export const useFilterStore = defineStore('filters', {
       this.includeNeutral = false;
       this.timeGranularity = 'Year';
       this.selectedMonth = '';
+      this.startDate = '';
+      this.endDate = '';
     },
     applyCrossfilter(payload: { type?: '' | TxType; category?: string; label?: string; month?: string }) {
       if (payload.type !== undefined) this.type = payload.type;

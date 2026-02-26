@@ -13,7 +13,7 @@
     <div class="mt-3 grid gap-3 md:grid-cols-5">
       <div class="rounded bg-slate-100 p-2" v-for="item in kpisList" :key="item.label">
         <p class="text-xs text-slate-500">{{ item.label }}</p>
-        <p class="font-semibold">{{ item.value }}</p>
+        <p class="font-semibold" :class="item.tone">{{ item.value }}</p>
       </div>
     </div>
 
@@ -26,34 +26,60 @@ import { computed, ref } from 'vue';
 import VChart from 'vue-echarts';
 import { buildBudgetSankey, buildCategoryDrilldownSankey, buildIncomeDrilldownSankey, computeKpis } from '../utils/aggregations';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
+import { useFilterStore } from '../stores/useFilterStore';
 
 const tx = useTransactionsStore();
+const filters = useFilterStore();
 const selectedCategory = ref('');
 const drillType = ref<'' | 'income' | 'expense'>('');
 
-const kpis = computed(() => computeKpis(tx.rows));
+const formatter = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+
+const filteredRows = computed(() => {
+  return tx.rows.filter((row) => {
+    if (!filters.includeNeutral && row.type === 'Neutral') return false;
+    if (filters.type && row.type !== filters.type) return false;
+    if (filters.selectedYear && row.date.slice(0, 4) !== filters.selectedYear) return false;
+    if (filters.selectedMonth && row.date.slice(0, 7) !== filters.selectedMonth) return false;
+    if (filters.categories.length && !filters.categories.includes(row.category)) return false;
+    if (filters.labels.length && !filters.labels.includes(row.label)) return false;
+    if (filters.startDate && row.date.slice(0, 10) < filters.startDate) return false;
+    if (filters.endDate && row.date.slice(0, 10) > filters.endDate) return false;
+    return true;
+  });
+});
+
+const kpis = computed(() => computeKpis(filteredRows.value));
 const kpisList = computed(() => [
-  { label: 'Income', value: kpis.value.income.toFixed(2) },
-  { label: 'Expenses', value: kpis.value.expenses.toFixed(2) },
-  { label: 'Net', value: kpis.value.net.toFixed(2) },
-  { label: 'Transactions', value: kpis.value.txCount },
+  { label: 'Income', value: formatter.format(kpis.value.income), tone: 'text-emerald-700' },
+  { label: 'Expenses', value: formatter.format(kpis.value.expenses), tone: 'text-rose-700' },
+  { label: 'Net', value: formatter.format(kpis.value.net), tone: kpis.value.net >= 0 ? 'text-emerald-700' : 'text-rose-700' },
+  { label: 'Transactions', value: String(kpis.value.txCount), tone: 'text-slate-900' },
   {
     label: selectedCategory.value ? `Drilldown (${drillType.value || 'category'})` : 'Top category',
     value: selectedCategory.value || kpis.value.topCategory,
+    tone: 'text-slate-900',
   },
 ]);
 
 const option = computed(() => {
   const sankey = !selectedCategory.value
-    ? buildBudgetSankey(tx.rows)
+    ? buildBudgetSankey(filteredRows.value)
     : drillType.value === 'income'
-      ? buildIncomeDrilldownSankey(tx.rows, selectedCategory.value)
-      : buildCategoryDrilldownSankey(tx.rows, selectedCategory.value);
+      ? buildIncomeDrilldownSankey(filteredRows.value, selectedCategory.value)
+      : buildCategoryDrilldownSankey(filteredRows.value, selectedCategory.value);
+
+  const incoming = new Map<string, number>();
+  const outgoing = new Map<string, number>();
+  sankey.links.forEach((link) => {
+    outgoing.set(link.source, (outgoing.get(link.source) ?? 0) + link.value);
+    incoming.set(link.target, (incoming.get(link.target) ?? 0) + link.value);
+  });
 
   return {
     tooltip: {
       trigger: 'item',
-      valueFormatter: (value: number) => `${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value)}`,
+      valueFormatter: (value: number) => formatter.format(value),
     },
     series: [
       {
@@ -65,7 +91,14 @@ const option = computed(() => {
         nodeAlign: 'justify',
         nodeGap: 12,
         draggable: false,
-        label: { color: '#0f172a', fontWeight: 500 },
+        label: {
+          color: '#0f172a',
+          fontWeight: 500,
+          formatter: (params: { name: string }) => {
+            const value = Math.max(incoming.get(params.name) ?? 0, outgoing.get(params.name) ?? 0);
+            return `${params.name}: ${formatter.format(value)}`;
+          },
+        },
       },
     ],
   };

@@ -31,8 +31,8 @@
       </aside>
 
       <div class="flex min-w-0 flex-1 flex-col">
-        <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-          <div class="flex w-full items-center justify-between gap-3 px-4 py-3">
+        <header class="sticky top-0 z-20 h-[72px] border-b border-slate-200 bg-white/90 backdrop-blur">
+          <div class="flex h-full w-full items-center justify-between gap-3 px-4">
             <div>
               <h1 class="text-base font-semibold">{{ ui.tab }}</h1>
               <p class="text-xs text-slate-500">Local-only analysis</p>
