@@ -48,18 +48,34 @@ export function buildBudgetSankey(rows: Tx[]) {
   return { nodes, links };
 }
 
+function normalizedToken(value?: string) {
+  return (value ?? '').trim();
+}
+
+function buildBreakdownByKey(rows: Tx[], keySelector: (row: Tx) => string) {
+  const grouped = new Map<string, number>();
+  rows.forEach((row) => {
+    const key = keySelector(row) || 'Unspecified';
+    grouped.set(key, (grouped.get(key) ?? 0) + row.amountAbs);
+  });
+  return grouped;
+}
+
 export function buildCategoryDrilldownSankey(rows: Tx[], category: string) {
   const expenses = rows.filter((row) => row.type === 'Expense' && row.category === category);
-  const byLabel = new Map<string, number>();
 
-  expenses.forEach((row) => {
-    byLabel.set(row.label, (byLabel.get(row.label) ?? 0) + row.amountAbs);
-  });
+  const byLabel = buildBreakdownByKey(expenses, (row) => normalizedToken(row.label));
+  const byPurpose = buildBreakdownByKey(expenses, (row) => normalizedToken(row.purpose));
+
+  // Prefer Bezeichnung/label breakdown, but if label collapses to one bucket (e.g. all "Ausgabe"),
+  // fallback to purpose so the drilldown still reveals meaningful subcategories.
+  const usePurposeFallback = byLabel.size <= 1 && byPurpose.size > 1;
+  const breakdown = usePurposeFallback ? byPurpose : byLabel;
 
   const nodes = [{ name: category }];
   const links: { source: string; target: string; value: number }[] = [];
 
-  topNGrouped(byLabel, 20).forEach(([label, value]) => {
+  topNGrouped(breakdown, 20).forEach(([label, value]) => {
     const target = `${label}`;
     nodes.push({ name: target });
     links.push({ source: category, target, value });
