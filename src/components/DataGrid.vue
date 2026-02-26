@@ -5,12 +5,12 @@
       <input
         v-model="search"
         class="term-input w-72"
-        placeholder="> search..."
+        :placeholder="t('data_search_placeholder')"
         aria-label="Search transactions"
       />
     </div>
 
-    <p class="mt-2 text-xs text-terminal-muted">Showing {{ pagedRows.length }} of {{ sortedRows.length }} filtered rows ({{ tx.rows.length }} total)</p>
+    <p class="mt-2 text-xs text-terminal-muted">{{ t('data_showing') }} {{ pagedRows.length }} {{ t('data_of') }} {{ sortedRows.length }} {{ t('data_filtered_rows') }} ({{ tx.rows.length }} {{ t('data_total') }})</p>
 
     <div class="mt-3 min-h-0 flex-1 overflow-auto">
       <table class="w-full text-sm">
@@ -119,7 +119,7 @@
                 @keydown.escape="cancelEdit"
                 ref="editInputs"
               />
-              <span v-else>{{ item.amount.toFixed(2) }}</span>
+              <span v-else>{{ formatCurrency(item.amount) }}</span>
             </td>
 
             <!-- Row overflow menu -->
@@ -130,8 +130,8 @@
                 ref="menuRoot"
                 class="absolute right-0 top-8 z-30 border border-terminal-border bg-terminal-surface"
               >
-                <button class="w-full px-3 py-1 text-left text-xs hover:bg-terminal-green-dim" @click="duplicate(item.id)">Duplicate</button>
-                <button class="w-full px-3 py-1 text-left text-xs text-terminal-red hover:bg-terminal-green-dim" @click="remove(item.id)">Delete</button>
+                <button class="w-full px-3 py-1 text-left text-xs hover:bg-terminal-green-dim" @click="duplicate(item.id)">{{ t('data_duplicate') }}</button>
+                <button class="w-full px-3 py-1 text-left text-xs text-terminal-red hover:bg-terminal-green-dim" @click="remove(item.id)">{{ t('data_delete') }}</button>
               </div>
             </td>
           </tr>
@@ -141,14 +141,14 @@
 
     <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex gap-2">
-        <button class="term-btn" @click="tx.undo">Undo</button>
-        <button class="term-btn" @click="tx.redo">Redo</button>
+        <button class="term-btn" @click="tx.undo">{{ t('data_undo') }}</button>
+        <button class="term-btn" @click="tx.redo">{{ t('data_redo') }}</button>
       </div>
 
       <div class="flex items-center gap-2 text-sm">
-        <button class="term-btn px-3 py-1.5 disabled:opacity-50" :disabled="page === 1" @click="page--">Prev</button>
-        <span class="text-terminal-muted">Page {{ page }} / {{ totalPages }}</span>
-        <button class="term-btn px-3 py-1.5 disabled:opacity-50" :disabled="page === totalPages" @click="page++">Next</button>
+        <button class="term-btn px-3 py-1.5 disabled:opacity-50" :disabled="page === 1" @click="page--">{{ t('data_prev') }}</button>
+        <span class="text-terminal-muted">{{ t('data_page') }} {{ page }} / {{ totalPages }}</span>
+        <button class="term-btn px-3 py-1.5 disabled:opacity-50" :disabled="page === totalPages" @click="page++">{{ t('data_next') }}</button>
         <select class="term-select px-2 py-1.5" v-model.number="pageSize">
           <option :value="25">25</option>
           <option :value="50">50</option>
@@ -162,9 +162,11 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
+import { useLocale } from '../composables/useLocale';
 import type { Tx } from '../types';
 
 const tx = useTransactionsStore();
+const { t, formatCurrency } = useLocale();
 const search = ref('');
 const page = ref(1);
 const pageSize = ref(50);
@@ -173,14 +175,14 @@ const sortDir = ref<'asc' | 'desc'>('desc');
 const editingCell = ref<{ rowId: string; field: string } | null>(null);
 const openMenu = ref<string | null>(null);
 
-const columns: { key: keyof Tx; label: string }[] = [
-  { key: 'date', label: 'Date' },
-  { key: 'type', label: 'Type' },
-  { key: 'category', label: 'Category' },
-  { key: 'label', label: 'Label' },
-  { key: 'purpose', label: 'Purpose' },
-  { key: 'amount', label: 'Amount' },
-];
+const columns = computed<{ key: keyof Tx; label: string }[]>(() => [
+  { key: 'date', label: t('col_date') },
+  { key: 'type', label: t('col_type') },
+  { key: 'category', label: t('col_category') },
+  { key: 'label', label: t('col_label') },
+  { key: 'purpose', label: t('col_purpose') },
+  { key: 'amount', label: t('col_amount') },
+]);
 
 const filteredRows = computed(() => {
   const q = search.value.trim().toLowerCase();

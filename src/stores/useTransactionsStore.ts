@@ -20,6 +20,12 @@ export const useTransactionsStore = defineStore('transactions', {
       this.rows = rows;
       persistRows(this.rows);
     },
+    addRows(rows: Tx[]) {
+      this.history.push(structuredClone(this.rows));
+      this.future = [];
+      this.rows = [...this.rows, ...rows];
+      persistRows(this.rows);
+    },
     editRow(id: string, patch: Partial<Tx>) {
       this.history.push(structuredClone(this.rows));
       this.future = [];

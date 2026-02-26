@@ -6,7 +6,7 @@
         <h3 class="text-sm font-bold text-terminal-amber">{{ title }}</h3>
         <p class="mt-2 text-sm text-terminal-green">{{ message }}</p>
         <div class="mt-4 flex justify-end gap-2">
-          <button class="term-btn px-3 py-1 text-xs" @click="$emit('cancel')">Cancel</button>
+          <button class="term-btn px-3 py-1 text-xs" @click="$emit('cancel')">{{ t('cancel') }}</button>
           <button class="term-btn-danger px-3 py-1 text-xs" @click="$emit('confirm')">{{ confirmLabel }}</button>
         </div>
       </div>
@@ -15,6 +15,8 @@
 </template>
 
 <script setup lang="ts">
+import { useLocale } from '../composables/useLocale';
+
 defineProps<{
   open: boolean;
   title: string;
@@ -26,4 +28,6 @@ defineEmits<{
   confirm: [];
   cancel: [];
 }>();
+
+const { t } = useLocale();
 </script>

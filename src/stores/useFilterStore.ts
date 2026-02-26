@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia';
 import type { TxType } from '../types';
+import { useLocaleStore } from './useLocaleStore';
+import { en } from '../i18n/en';
+import { de } from '../i18n/de';
 
 export const useFilterStore = defineStore('filters', {
   state: () => ({
@@ -13,14 +16,17 @@ export const useFilterStore = defineStore('filters', {
   }),
   getters: {
     dateLabel(state): string {
+      const locale = useLocaleStore();
+      const msgs = locale.lang === 'de' ? de : en;
+      const loc = locale.lang === 'de' ? 'de-DE' : 'en-GB';
       if (state.startDate && state.endDate) {
         const fmt = (d: string) => {
           const dt = new Date(d + 'T00:00:00');
-          return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          return dt.toLocaleDateString(loc, { month: 'short', day: 'numeric', year: 'numeric' });
         };
         return `${fmt(state.startDate)} – ${fmt(state.endDate)}`;
       }
-      return 'All time';
+      return msgs.filter_all_time;
     },
   },
   actions: {

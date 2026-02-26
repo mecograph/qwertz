@@ -1,6 +1,6 @@
 <template>
-  <div class="term-pane">
-    <pre class="text-terminal-green-dim text-xs leading-tight">
+  <div class="flex flex-col items-center text-center">
+    <pre class="text-terminal-green-dim text-xs leading-tight hidden sm:block">
   _____ _  __   _   _  _   _   _ __   _______ ___
  |_   _| \/ /  /_\ | \| | /_\ | |\ \ / /_  / | __| _ \
    | | |  /  / _ \| .` |/ _ \| |_\ V / / /  | _||   /
@@ -9,23 +9,25 @@
     <h1 class="mt-4 text-xl font-bold">
       <span>{{ displayed }}</span><span v-if="!done" class="cursor-blink"></span>
     </h1>
-    <p class="mt-2 text-terminal-muted">Import XLSX/CSV. Your data stays local in your browser.</p>
-    <div class="mt-6 flex flex-wrap gap-3">
-      <label class="term-btn cursor-pointer">
-        [ Upload file ]
+    <p class="mt-2 text-terminal-muted">{{ t('splash_tagline') }}</p>
+    <div class="mt-6 flex flex-col gap-3 w-full max-w-xs">
+      <label class="term-btn cursor-pointer text-center">
+        {{ t('splash_upload') }}
         <input class="hidden" type="file" accept=".csv,.xlsx" @change="onChange" />
       </label>
-      <button class="term-btn" @click="$emit('import-json')">[ Import JSON ]</button>
-      <button class="term-btn" @click="$emit('continue')">[ Continue saved ]</button>
+      <button class="term-btn" @click="$emit('import-json')">{{ t('splash_import_json') }}</button>
+      <button class="term-btn" @click="$emit('continue')">{{ t('splash_continue') }}</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTypewriter } from '../composables/useTypewriter';
+import { useLocale } from '../composables/useLocale';
 
 const emit = defineEmits<{ upload: [file: File]; 'import-json': []; continue: [] }>();
 const { displayed, done } = useTypewriter('$ Client-Side Transaction Analyzer');
+const { t } = useLocale();
 
 function onChange(event: Event) {
   const target = event.target as HTMLInputElement;

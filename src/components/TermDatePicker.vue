@@ -7,7 +7,7 @@
     <div v-if="open" class="absolute right-0 top-11 z-40 flex w-[32rem] max-w-[calc(100vw-2rem)] border border-terminal-border bg-terminal-surface">
       <!-- Presets (left) -->
       <div class="w-2/5 border-r border-terminal-border p-3 overflow-auto max-h-80">
-        <p class="text-xs font-bold text-terminal-amber">Presets</p>
+        <p class="text-xs font-bold text-terminal-amber">{{ t('filter_presets') }}</p>
         <div class="mt-2 space-y-1">
           <button
             v-for="preset in fixedPresets"
@@ -20,7 +20,7 @@
           </button>
         </div>
 
-        <p class="mt-3 text-xs font-bold text-terminal-amber">Years</p>
+        <p class="mt-3 text-xs font-bold text-terminal-amber">{{ t('filter_years') }}</p>
         <div class="mt-1 space-y-1">
           <button
             v-for="year in years"
@@ -33,7 +33,7 @@
           </button>
         </div>
 
-        <p class="mt-3 text-xs font-bold text-terminal-amber">Months</p>
+        <p class="mt-3 text-xs font-bold text-terminal-amber">{{ t('filter_months') }}</p>
         <div class="mt-1 space-y-1">
           <button
             v-for="month in months"
@@ -51,11 +51,11 @@
       <div class="flex w-3/5 flex-col p-3">
         <div class="space-y-2">
           <label class="text-xs text-terminal-muted">
-            Start
+            {{ t('filter_start') }}
             <input type="date" v-model="localStart" class="term-input mt-1 w-full" />
           </label>
           <label class="text-xs text-terminal-muted">
-            End
+            {{ t('filter_end') }}
             <input type="date" v-model="localEnd" class="term-input mt-1 w-full" />
           </label>
         </div>
@@ -63,8 +63,8 @@
         <p class="mt-3 text-sm text-terminal-green">{{ localLabel }}</p>
 
         <div class="mt-auto flex justify-end gap-2 pt-4">
-          <button class="term-btn px-3 py-1 text-xs" @click="cancel">Cancel</button>
-          <button class="term-btn px-3 py-1 text-xs" @click="apply">Apply</button>
+          <button class="term-btn px-3 py-1 text-xs" @click="cancel">{{ t('filter_cancel') }}</button>
+          <button class="term-btn px-3 py-1 text-xs" @click="apply">{{ t('filter_apply') }}</button>
         </div>
       </div>
     </div>
@@ -76,9 +76,11 @@ import { computed, ref, watch } from 'vue';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useClickOutside } from '../composables/useClickOutside';
+import { useLocale } from '../composables/useLocale';
 
 const filters = useFilterStore();
 const tx = useTransactionsStore();
+const { t, formatDate, formatMonth } = useLocale();
 
 const root = ref<HTMLElement | null>(null);
 const open = ref(false);
@@ -94,12 +96,12 @@ watch(open, (isOpen) => {
   }
 });
 
-const fixedPresets = [
-  { label: 'Last 7 days', days: 7 },
-  { label: 'Last 30 days', days: 30 },
-  { label: 'Last 90 days', days: 90 },
-  { label: 'This month', days: 0 },
-];
+const fixedPresets = computed(() => [
+  { label: t('preset_last_7'), days: 7 },
+  { label: t('preset_last_30'), days: 30 },
+  { label: t('preset_last_90'), days: 90 },
+  { label: t('preset_this_month'), days: 0 },
+]);
 
 const years = computed(() => {
   const set = new Set(tx.rows.map((row) => row.date.slice(0, 4)));
@@ -113,20 +115,10 @@ const months = computed(() => {
 
 const localLabel = computed(() => {
   if (localStart.value && localEnd.value) {
-    const fmt = (d: string) => {
-      const dt = new Date(d + 'T00:00:00');
-      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    };
-    return `${fmt(localStart.value)} – ${fmt(localEnd.value)}`;
+    return `${formatDate(localStart.value)} – ${formatDate(localEnd.value)}`;
   }
-  return 'All time';
+  return t('filter_all_time');
 });
-
-function formatMonth(ym: string) {
-  const [year, month] = ym.split('-');
-  const dt = new Date(Number(year), Number(month) - 1, 1);
-  return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-}
 
 function selectPreset(preset: { days: number }) {
   const now = new Date();

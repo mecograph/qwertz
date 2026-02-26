@@ -2,7 +2,7 @@
   <section class="space-y-4">
     <div class="term-pane">
       <h2 class="text-sm font-bold">$ charts</h2>
-      <p class="mt-1 text-xs text-terminal-muted">Excel parity pack · Subcategory = Bezeichnung · chart-first monthly detail</p>
+      <p class="mt-1 text-xs text-terminal-muted">{{ t('charts_desc') }}</p>
     </div>
 
     <div class="grid gap-3 md:grid-cols-5">
@@ -16,32 +16,32 @@
     <div class="grid gap-4 lg:grid-cols-2">
       <!-- Chart 1: Income vs Expense by Category -->
       <div class="term-pane">
-        <h3 class="text-sm font-bold">Income vs Expense by Category</h3>
+        <h3 class="text-sm font-bold">{{ t('charts_income_expense_by_cat') }}</h3>
         <div class="mt-2 flex gap-2">
           <VChart ref="chart1Ref" class="h-80 min-w-0 flex-1" :option="incomeExpenseByCategoryOption" :theme="ui.chartTheme" autoresize @click="onChartClick" />
-          <TermChartLegend :items="chart1Legend" :chart-ref="chart1Ref" />
+          <TermChartLegend class="hidden lg:block" :items="chart1Legend" :chart-ref="chart1Ref" />
         </div>
       </div>
 
       <!-- Chart 2: Category with Bezeichnung breakdown -->
       <div class="term-pane">
         <div class="mb-2 flex flex-wrap items-center gap-2">
-          <h3 class="text-sm font-bold">Category + Bezeichnung</h3>
+          <h3 class="text-sm font-bold">{{ t('charts_category_label') }}</h3>
           <select v-model="mode" class="term-select px-2 py-1 text-xs">
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-            <option value="split">Split</option>
+            <option value="expense">{{ t('charts_mode_expense') }}</option>
+            <option value="income">{{ t('charts_mode_income') }}</option>
+            <option value="split">{{ t('charts_mode_split') }}</option>
           </select>
         </div>
         <div class="flex gap-2">
           <VChart ref="chart2Ref" class="h-80 min-w-0 flex-1" :option="categoryLabelOption" :theme="ui.chartTheme" autoresize @click="onChartClick" />
-          <TermChartLegend :items="chart2Legend" :chart-ref="chart2Ref" />
+          <TermChartLegend class="hidden lg:block" :items="chart2Legend" :chart-ref="chart2Ref" />
         </div>
       </div>
 
       <!-- Chart 3: Year overview monthly side-by-side (spans both cols) -->
       <div class="term-pane lg:col-span-2">
-        <h3 class="text-sm font-bold">Year overview: monthly Income &amp; Expense by Category</h3>
+        <h3 class="text-sm font-bold">{{ t('charts_year_overview') }}</h3>
         <VChart class="mt-2 h-80" :option="monthlySideBySideOption" :theme="ui.chartTheme" autoresize @click="onChartClick" />
       </div>
     </div>
@@ -50,26 +50,26 @@
     <div class="grid gap-4 lg:grid-cols-3">
       <div class="term-pane lg:col-span-2">
         <div class="mb-2 flex items-center justify-between">
-          <h3 class="text-sm font-bold">Monthly Detail (Chart-first)</h3>
-          <button class="term-btn text-xs" @click="openInData">[ Open in Data ]</button>
+          <h3 class="text-sm font-bold">{{ t('charts_monthly_detail') }}</h3>
+          <button class="term-btn text-xs" @click="openInData">{{ t('charts_open_in_data') }}</button>
         </div>
         <VChart class="h-64" :option="monthlyDetailCategoryOption" :theme="ui.chartTheme" autoresize @click="onMonthlyCategoryClick" />
         <VChart class="mt-3 h-64" :option="monthlyDetailLabelOption" :theme="ui.chartTheme" autoresize @click="onMonthlyLabelClick" />
       </div>
 
       <aside class="term-pane">
-        <h4 class="text-sm font-bold">Detail drawer</h4>
+        <h4 class="text-sm font-bold">{{ t('charts_detail_drawer') }}</h4>
         <p class="mt-1 text-xs text-terminal-muted">{{ breadcrumb }}</p>
         <div class="mt-3 grid gap-2">
-          <div class="term-stat text-sm">AmountAbs: {{ formatCurrency(detailKpis.amountAbs) }}</div>
-          <div class="term-stat text-sm">Transactions: {{ detailKpis.count }}</div>
-          <div class="term-stat text-sm">Avg: {{ formatCurrency(detailKpis.avg) }}</div>
-          <div class="term-stat text-sm">Largest: {{ formatCurrency(detailKpis.largest) }}</div>
+          <div class="term-stat text-sm">{{ t('charts_amount_abs') }}: {{ formatCurrency(detailKpis.amountAbs) }}</div>
+          <div class="term-stat text-sm">{{ t('kpi_transactions') }}: {{ detailKpis.count }}</div>
+          <div class="term-stat text-sm">{{ t('charts_avg') }}: {{ formatCurrency(detailKpis.avg) }}</div>
+          <div class="term-stat text-sm">{{ t('charts_largest') }}: {{ formatCurrency(detailKpis.largest) }}</div>
         </div>
         <div class="mt-3 max-h-64 overflow-auto border border-terminal-border">
           <table class="w-full text-xs">
             <thead class="sticky top-0 bg-terminal-bg">
-              <tr><th class="p-1 text-left text-terminal-amber">Date</th><th class="p-1 text-left text-terminal-amber">Category</th><th class="p-1 text-left text-terminal-amber">Bezeichnung</th><th class="p-1 text-right text-terminal-amber">Amount</th></tr>
+              <tr><th class="p-1 text-left text-terminal-amber">{{ t('col_date') }}</th><th class="p-1 text-left text-terminal-amber">{{ t('col_category') }}</th><th class="p-1 text-left text-terminal-amber">{{ t('charts_breadcrumb_label') }}</th><th class="p-1 text-right text-terminal-amber">{{ t('col_amount') }}</th></tr>
             </thead>
             <tbody>
               <tr v-for="row in detailRows.slice(0, 20)" :key="row.id" class="border-t border-terminal-border">
@@ -94,11 +94,13 @@ import TermChartLegend from './TermChartLegend.vue';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useUiStore } from '../stores/useUiStore';
+import { useLocale } from '../composables/useLocale';
 import type { Tx } from '../types';
 
 const tx = useTransactionsStore();
 const filters = useFilterStore();
 const ui = useUiStore();
+const { t, formatCurrency } = useLocale();
 
 const mode = ref<'expense' | 'income' | 'split'>('expense');
 const selectedCategory = ref<string>('');
@@ -108,8 +110,6 @@ const selectedLabel = ref<string>('');
 const chart1Ref = shallowRef<any>(null);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chart2Ref = shallowRef<any>(null);
-
-const formatCurrency = (value: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
 
 const DARK_COLORS = [
   '#33ff00', '#ffb000', '#00ffff', '#ff3333', '#ff00ff',
@@ -150,11 +150,11 @@ const kpis = computed(() => {
   const income = filteredRows.value.filter((row) => row.amount > 0).reduce((sum, row) => sum + row.amount, 0);
   const expense = filteredRows.value.filter((row) => row.amount < 0).reduce((sum, row) => sum + row.amountAbs, 0);
   return [
-    { label: 'Income', value: formatCurrency(income) },
-    { label: 'Expenses', value: formatCurrency(expense) },
-    { label: 'Net', value: formatCurrency(income - expense) },
-    { label: 'Transactions', value: String(filteredRows.value.length) },
-    { label: 'Top Category', value: topCategory(filteredRows.value) || '-' },
+    { label: t('kpi_income'), value: formatCurrency(income) },
+    { label: t('kpi_expenses'), value: formatCurrency(expense) },
+    { label: t('kpi_net'), value: formatCurrency(income - expense) },
+    { label: t('kpi_transactions'), value: String(filteredRows.value.length) },
+    { label: t('kpi_top_category'), value: topCategory(filteredRows.value) || '-' },
   ];
 });
 
@@ -187,7 +187,7 @@ const incomeExpenseByCategoryOption = computed<ECBasicOption>(() => {
     tooltip: { trigger: 'item', valueFormatter: (value: number) => formatCurrency(value) },
     legend: { show: false },
     grid: { left: 50, right: 20, bottom: 30, top: 10 },
-    xAxis: { type: 'category', data: ['Expense', 'Income'] },
+    xAxis: { type: 'category', data: [t('charts_axis_expense'), t('charts_axis_income')] },
     yAxis: { type: 'value' },
     series,
   };
@@ -209,7 +209,11 @@ const categoryLabelOption = computed<ECBasicOption>(() => {
   });
 
   const categories = categoriesForTopN(base, 12);
-  const labels = [...new Set(base.map((row) => row.label))].slice(0, 20);
+
+  // Sort labels by total descending (Feature 1: chart sorting fix)
+  const labelMap = new Map<string, number>();
+  base.forEach((row) => labelMap.set(row.label, (labelMap.get(row.label) ?? 0) + row.amountAbs));
+  const labels = [...labelMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 20).map(([name]) => name);
 
   const series = labels.map((label) => ({
     name: label,
@@ -239,10 +243,17 @@ const chart2Legend = computed(() => {
     if (mode.value === 'income') return row.type === 'Income';
     return row.type === 'Expense' || row.type === 'Income';
   });
-  return [...new Set(base.map((row) => row.label))].slice(0, 20).map((name, i) => ({
-    name,
-    color: chartColors.value[i % chartColors.value.length],
-  }));
+
+  // Sort labels by total descending (Feature 1: chart sorting fix)
+  const labelMap = new Map<string, number>();
+  base.forEach((row) => labelMap.set(row.label, (labelMap.get(row.label) ?? 0) + row.amountAbs));
+  return [...labelMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([name], i) => ({
+      name,
+      color: chartColors.value[i % chartColors.value.length],
+    }));
 });
 
 const monthlySideBySideOption = computed<ECBasicOption>(() => {
@@ -252,14 +263,14 @@ const monthlySideBySideOption = computed<ECBasicOption>(() => {
 
   const series = categories.flatMap((category) => [
     {
-      name: `${category} Expense`,
+      name: `${category} ${t('charts_axis_expense')}`,
       type: 'bar',
       stack: 'expense',
       barWidth: 12,
       data: months.map((month) => rows.filter((row) => row.date.slice(0, 7) === month && row.type === 'Expense' && row.category === category).reduce((sum, row) => sum + row.amountAbs, 0)),
     },
     {
-      name: `${category} Income`,
+      name: `${category} ${t('charts_axis_income')}`,
       type: 'bar',
       stack: 'income',
       barWidth: 12,
@@ -300,7 +311,7 @@ const monthlyDetailCategoryOption = computed<ECBasicOption>(() => {
     tooltip: { trigger: 'item', valueFormatter: (value: number) => formatCurrency(value) },
     xAxis: { type: 'category', data: grouped.map((item) => item.category), axisLabel: { rotate: 25 } },
     yAxis: { type: 'value' },
-    series: [{ type: 'bar', data: grouped.map((item) => item.value), name: 'Category', barWidth: 12 }],
+    series: [{ type: 'bar', data: grouped.map((item) => item.value), name: t('col_category'), barWidth: 12 }],
   };
 });
 
@@ -338,14 +349,15 @@ const detailKpis = computed(() => {
 
 const breadcrumb = computed(() => {
   const range = filters.dateLabel;
-  const type = filters.type || 'Expense';
-  return `${range} > ${type} > ${selectedCategory.value || 'Category'} > ${selectedLabel.value || 'Bezeichnung'}`;
+  const type = filters.type || t('charts_mode_expense');
+  return `${range} > ${type} > ${selectedCategory.value || t('charts_breadcrumb_category')} > ${selectedLabel.value || t('charts_breadcrumb_label')}`;
 });
 
 function onChartClick(params: { seriesName?: string; name?: string; dataIndex?: number }) {
   if (!params.seriesName || !params.name) return;
-  if (params.name === 'Expense' || params.name === 'Income') {
-    filters.applyCrossfilter({ type: params.name as 'Expense' | 'Income', category: params.seriesName });
+  if (params.name === t('charts_axis_expense') || params.name === t('charts_axis_income')) {
+    const type = params.name === t('charts_axis_expense') ? 'Expense' : 'Income';
+    filters.applyCrossfilter({ type: type as 'Expense' | 'Income', category: params.seriesName });
     selectedCategory.value = params.seriesName;
   }
 }

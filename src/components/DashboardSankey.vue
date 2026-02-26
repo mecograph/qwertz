@@ -2,7 +2,7 @@
   <section class="flex h-full min-h-0 flex-col term-pane">
     <div>
       <h2 class="text-sm font-bold">$ dashboard_sankey</h2>
-      <p class="text-xs text-terminal-muted">Income categories flow into Budget, then Budget flows to spending categories. Click categories (or links) to drill down.</p>
+      <p class="text-xs text-terminal-muted">{{ t('dashboard_desc') }}</p>
     </div>
 
     <div class="mt-3 grid gap-3 md:grid-cols-5">
@@ -14,9 +14,9 @@
 
     <!-- Breadcrumb (visible only when drilled down) -->
     <div v-if="selectedCategory" class="mt-3 text-sm">
-      <button class="text-terminal-cyan hover:underline" @click="clearDrilldown">Budget</button>
+      <button class="text-terminal-cyan hover:underline" @click="clearDrilldown">{{ t('dashboard_budget') }}</button>
       <span class="text-terminal-muted"> / </span>
-      <span class="text-terminal-amber">{{ drillType === 'income' ? 'Income' : 'Expense' }}</span>
+      <span class="text-terminal-amber">{{ drillType === 'income' ? t('kpi_income') : t('kpi_expenses') }}</span>
       <span class="text-terminal-muted"> / </span>
       <span class="text-terminal-green">{{ selectedCategory }}</span>
     </div>
@@ -32,14 +32,14 @@ import { buildBudgetSankey, buildCategoryDrilldownSankey, buildIncomeDrilldownSa
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useUiStore } from '../stores/useUiStore';
+import { useLocale } from '../composables/useLocale';
 
 const tx = useTransactionsStore();
 const filters = useFilterStore();
 const ui = useUiStore();
+const { t, formatCurrency } = useLocale();
 const selectedCategory = ref('');
 const drillType = ref<'' | 'income' | 'expense'>('');
-
-const formatter = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
 const filteredRows = computed(() => {
   return tx.rows.filter((row) => {
@@ -55,12 +55,12 @@ const filteredRows = computed(() => {
 
 const kpis = computed(() => computeKpis(filteredRows.value));
 const kpisList = computed(() => [
-  { label: 'Income', value: formatter.format(kpis.value.income), tone: 'text-terminal-green' },
-  { label: 'Expenses', value: formatter.format(kpis.value.expenses), tone: 'text-terminal-red' },
-  { label: 'Net', value: formatter.format(kpis.value.net), tone: kpis.value.net >= 0 ? 'text-terminal-green' : 'text-terminal-red' },
-  { label: 'Transactions', value: String(kpis.value.txCount), tone: 'text-terminal-amber' },
+  { label: t('kpi_income'), value: formatCurrency(kpis.value.income), tone: 'text-terminal-green' },
+  { label: t('kpi_expenses'), value: formatCurrency(kpis.value.expenses), tone: 'text-terminal-red' },
+  { label: t('kpi_net'), value: formatCurrency(kpis.value.net), tone: kpis.value.net >= 0 ? 'text-terminal-green' : 'text-terminal-red' },
+  { label: t('kpi_transactions'), value: String(kpis.value.txCount), tone: 'text-terminal-amber' },
   {
-    label: selectedCategory.value ? `Drilldown (${drillType.value || 'category'})` : 'Top category',
+    label: selectedCategory.value ? `${t('kpi_drilldown')} (${drillType.value})` : t('kpi_top_category'),
     value: selectedCategory.value || kpis.value.topCategory,
     tone: 'text-terminal-cyan',
   },
@@ -83,7 +83,7 @@ const option = computed(() => {
   return {
     tooltip: {
       trigger: 'item',
-      valueFormatter: (value: number) => formatter.format(value),
+      valueFormatter: (value: number) => formatCurrency(value),
     },
     series: [
       {
@@ -98,7 +98,7 @@ const option = computed(() => {
         label: {
           formatter: (params: { name: string }) => {
             const value = Math.max(incoming.get(params.name) ?? 0, outgoing.get(params.name) ?? 0);
-            return `${params.name}: ${formatter.format(value)}`;
+            return `${params.name}: ${formatCurrency(value)}`;
           },
         },
       },

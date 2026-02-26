@@ -32,7 +32,7 @@
         <aside class="filter-drawer-panel absolute right-0 top-0 h-full w-80 max-w-[85vw] overflow-y-auto border-l border-terminal-border bg-terminal-surface">
           <!-- Header -->
           <div class="flex items-center justify-between border-b border-terminal-border px-4 py-3">
-            <p class="text-sm font-bold">Filters</p>
+            <p class="text-sm font-bold">{{ t('filter_filters') }}</p>
             <button class="text-terminal-muted hover:text-terminal-green" @click="drawerOpen = false">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -41,7 +41,7 @@
           <div class="space-y-5 p-4">
             <!-- Date Range -->
             <section>
-              <p class="text-xs font-bold text-terminal-amber">Date Range</p>
+              <p class="text-xs font-bold text-terminal-amber">{{ t('filter_date_range') }}</p>
               <p class="mt-1 text-xs text-terminal-green">{{ filters.dateLabel }}</p>
 
               <!-- Presets -->
@@ -58,7 +58,7 @@
               </div>
 
               <!-- Years -->
-              <p class="mt-3 text-xs font-bold text-terminal-amber">Year</p>
+              <p class="mt-3 text-xs font-bold text-terminal-amber">{{ t('filter_year') }}</p>
               <div class="mt-1 flex flex-wrap gap-1">
                 <button
                   v-for="year in years"
@@ -72,7 +72,7 @@
               </div>
 
               <!-- Months -->
-              <p class="mt-3 text-xs font-bold text-terminal-amber">Month</p>
+              <p class="mt-3 text-xs font-bold text-terminal-amber">{{ t('filter_month') }}</p>
               <div class="mt-1 max-h-40 space-y-1 overflow-auto">
                 <button
                   v-for="month in months"
@@ -89,14 +89,14 @@
               <!-- Custom date inputs -->
               <div class="mt-3 space-y-2">
                 <label class="block text-xs text-terminal-muted">
-                  Start
+                  {{ t('filter_start') }}
                   <input type="date" v-model="drawerStart" class="term-input mt-1 w-full px-2 py-1 text-xs" />
                 </label>
                 <label class="block text-xs text-terminal-muted">
-                  End
+                  {{ t('filter_end') }}
                   <input type="date" v-model="drawerEnd" class="term-input mt-1 w-full px-2 py-1 text-xs" />
                 </label>
-                <button class="term-btn w-full px-3 py-1.5 text-xs" @click="applyCustomDate">Apply Date Range</button>
+                <button class="term-btn w-full px-3 py-1.5 text-xs" @click="applyCustomDate">{{ t('filter_apply_date_range') }}</button>
               </div>
             </section>
 
@@ -104,7 +104,7 @@
 
             <!-- Filter chips -->
             <section>
-              <p class="text-xs font-bold text-terminal-amber">Filters</p>
+              <p class="text-xs font-bold text-terminal-amber">{{ t('filter_filters') }}</p>
               <div class="mt-2">
                 <TermFilterChips />
               </div>
@@ -114,7 +114,7 @@
 
             <!-- Reset -->
             <button class="term-btn w-full px-3 py-2 text-xs" @click="resetFilters(); drawerOpen = false">
-              Reset All Filters
+              {{ t('filter_reset_all') }}
             </button>
           </div>
         </aside>
@@ -129,9 +129,11 @@ import TermDatePicker from './TermDatePicker.vue';
 import TermFilterChips from './TermFilterChips.vue';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
+import { useLocale } from '../composables/useLocale';
 
 const filters = useFilterStore();
 const tx = useTransactionsStore();
+const { t, formatMonth } = useLocale();
 
 const drawerOpen = ref(false);
 const drawerStart = ref('');
@@ -166,13 +168,13 @@ const activeFilterCount = computed(() => {
   return count;
 });
 
-// Date presets (same as TermDatePicker)
-const fixedPresets = [
-  { label: 'Last 7 days', days: 7 },
-  { label: 'Last 30 days', days: 30 },
-  { label: 'Last 90 days', days: 90 },
-  { label: 'This month', days: 0 },
-];
+// Date presets
+const fixedPresets = computed(() => [
+  { label: t('preset_last_7'), days: 7 },
+  { label: t('preset_last_30'), days: 30 },
+  { label: t('preset_last_90'), days: 90 },
+  { label: t('preset_this_month'), days: 0 },
+]);
 
 const years = computed(() => {
   const set = new Set(tx.rows.map((row) => row.date.slice(0, 4)));
@@ -183,12 +185,6 @@ const months = computed(() => {
   const set = new Set(tx.rows.map((row) => row.date.slice(0, 7)));
   return [...set].sort((a, b) => b.localeCompare(a));
 });
-
-function formatMonth(ym: string) {
-  const [year, month] = ym.split('-');
-  const dt = new Date(Number(year), Number(month) - 1, 1);
-  return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-}
 
 function selectPreset(preset: { days: number }) {
   const now = new Date();
