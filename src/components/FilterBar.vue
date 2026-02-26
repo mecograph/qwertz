@@ -1,12 +1,12 @@
 <template>
-  <div class="sticky top-0 z-10 rounded-xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-      <h2 class="text-sm font-semibold tracking-wide text-slate-700">Slicers</h2>
+  <div :class="compact ? 'rounded-lg border border-slate-200 bg-white p-2' : 'rounded-xl border border-slate-200 bg-white p-4 shadow-sm'">
+    <div class="flex flex-wrap items-center gap-2" :class="compact ? 'justify-end' : 'justify-between mb-3'">
+      <h2 v-if="!compact" class="text-sm font-semibold tracking-wide text-slate-700">Slicers</h2>
       <button class="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50" @click="resetToLatestYear">Reset filters</button>
     </div>
 
-    <div class="grid gap-3 md:grid-cols-6">
-      <div class="md:col-span-2">
+    <div class="grid gap-2" :class="compact ? 'grid-cols-1 md:grid-cols-6' : 'md:grid-cols-6'">
+      <div :class="compact ? 'md:col-span-2' : 'md:col-span-2'">
         <label class="mb-1 block text-xs font-medium text-slate-600">Time</label>
         <div class="flex flex-wrap gap-1">
           <button
@@ -46,13 +46,13 @@
         </select>
       </div>
 
-      <label class="flex items-center gap-2 text-sm text-slate-700">
+      <label class="flex items-center gap-2 pt-5 text-sm text-slate-700">
         <input type="checkbox" v-model="filters.includeNeutral" class="rounded border-slate-300" />
         Include Neutral
       </label>
     </div>
 
-    <div class="mt-3 grid gap-3 md:grid-cols-2">
+    <div v-if="!compact" class="mt-3 grid gap-3 md:grid-cols-2">
       <div>
         <label class="mb-1 block text-xs font-medium text-slate-600">Category slicer</label>
         <select multiple class="h-24 w-full rounded-md border border-slate-300 p-2 text-sm" v-model="filters.categories">
@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <div class="mt-3 flex flex-wrap gap-2">
+    <div class="mt-2 flex flex-wrap gap-1">
       <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-if="filters.type">Type: {{ filters.type }}</span>
       <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-for="category in filters.categories" :key="`c-${category}`">{{ category }}</span>
       <span class="rounded-full bg-slate-100 px-2 py-1 text-xs" v-for="label in filters.labels" :key="`l-${label}`">{{ label }}</span>
@@ -80,6 +80,10 @@
 import { computed, watchEffect } from 'vue';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
+
+withDefaults(defineProps<{ compact?: boolean }>(), {
+  compact: false,
+});
 
 const filters = useFilterStore();
 const tx = useTransactionsStore();

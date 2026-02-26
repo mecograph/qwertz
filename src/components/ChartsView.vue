@@ -213,7 +213,8 @@ const monthlySideBySideOption = computed<ECBasicOption>(() => {
 });
 
 const monthlyDetailRows = computed(() => {
-  const month = filters.selectedMonth || [...new Set(filteredRows.value.map((row) => row.date.slice(0, 7))).sort()].at(-1) || '';
+  const latestMonth = [...new Set(filteredRows.value.map((row) => row.date.slice(0, 7)))].sort().at(-1) || '';
+  const month = filters.selectedMonth || latestMonth;
   return filteredRows.value.filter((row) => row.date.slice(0, 7) === month && row.type !== 'Neutral');
 });
 

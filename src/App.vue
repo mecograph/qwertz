@@ -1,5 +1,9 @@
 <template>
   <AppShell>
+    <template #top-right>
+      <FilterBar v-if="mappingDone" compact />
+    </template>
+
     <UploadSplash
       v-if="!importStore.rows.length && !tx.rows.length"
       @upload="onUpload"
@@ -27,11 +31,10 @@
       </button>
 
       <template v-else>
-        <FilterBar />
-        <DashboardSankey v-if="ui.tab === 'Dashboard'" />
-        <ChartsView v-if="ui.tab === 'Charts'" />
-        <DataGrid v-if="ui.tab === 'Data'" />
-        <SettingsView v-if="ui.tab === 'Settings'" />
+        <DashboardSankey v-show="ui.tab === 'Dashboard'" />
+        <ChartsView v-show="ui.tab === 'Charts'" />
+        <DataGrid v-show="ui.tab === 'Data'" />
+        <SettingsView v-show="ui.tab === 'Settings'" />
       </template>
     </template>
   </AppShell>
