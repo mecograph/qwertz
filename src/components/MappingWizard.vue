@@ -1,10 +1,10 @@
 <template>
-  <section class="rounded-xl bg-white p-4 shadow">
-    <h2 class="text-lg font-semibold">Map columns</h2>
+  <section class="term-pane">
+    <h2 class="text-sm font-bold">$ map_columns</h2>
     <div class="mt-4 grid gap-3 md:grid-cols-2">
       <div v-for="field in fields" :key="field.key">
-        <label class="text-sm font-medium">{{ field.label }} <span v-if="field.required" class="text-red-600">*</span></label>
-        <select class="mt-1 w-full rounded border p-2" :value="mapping[field.key]" @change="set(field.key, $event)">
+        <label class="text-xs text-terminal-amber">{{ field.label }} <span v-if="field.required" class="text-terminal-red">*</span></label>
+        <select class="term-select mt-1 w-full" :value="mapping[field.key]" @change="set(field.key, $event)">
           <option value="">Not mapped</option>
           <option v-for="header in headers" :key="header" :value="header">{{ header }}</option>
         </select>

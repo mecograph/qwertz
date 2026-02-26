@@ -1,13 +1,13 @@
 <template>
-  <section class="rounded-xl bg-white p-4 shadow">
-    <h2 class="text-lg font-semibold">Select source</h2>
+  <section class="term-pane">
+    <h2 class="text-sm font-bold">$ select_source</h2>
     <div v-if="sheets.length" class="mt-3">
-      <label class="text-sm">Sheet</label>
-      <select class="mt-1 w-full rounded border p-2" :value="selectedSheet" @change="onSheet">
+      <label class="text-xs text-terminal-amber">Sheet</label>
+      <select class="term-select mt-1 w-full" :value="selectedSheet" @change="onSheet">
         <option v-for="sheet in sheets" :key="sheet.name" :value="sheet.name">{{ sheet.name }}</option>
       </select>
     </div>
-    <p class="mt-3 text-xs text-slate-500">Header row detection defaults to row 1 in this MVP.</p>
+    <p class="mt-3 text-xs text-terminal-muted">$ header_row=1 # default for this MVP</p>
   </section>
 </template>
 

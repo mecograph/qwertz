@@ -1,6 +1,6 @@
 <template>
-  <div v-if="active" class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-    Processing: Parse file → Build table → Apply mapping → Normalize rows → Persist
+  <div v-if="active" class="term-pane text-sm text-terminal-amber">
+    $ pipeline: parse_file | build_table | apply_mapping | normalize_rows | persist<span class="cursor-blink"></span>
   </div>
 </template>
 

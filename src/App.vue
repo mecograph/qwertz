@@ -1,7 +1,7 @@
 <template>
   <AppShell>
     <template #top-right>
-      <FilterBar v-if="mappingDone" compact />
+      <FilterBar v-if="mappingDone" />
     </template>
 
     <UploadSplash
@@ -26,8 +26,8 @@
         @set="mappingStore.setField"
       />
       <ValidationReview v-if="!mappingDone" :issues="mappingStore.issues" :valid-count="validRows.length" />
-      <button v-if="!mappingDone" class="w-fit rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-40" :disabled="!mappingStore.isComplete" @click="applyMapping">
-        Finish import
+      <button v-if="!mappingDone" class="term-btn disabled:opacity-40" :disabled="!mappingStore.isComplete" @click="applyMapping">
+        [ Finish import ]
       </button>
 
       <template v-else>
@@ -60,11 +60,13 @@ import { useMappingStore } from './stores/useMappingStore';
 import { useTransactionsStore } from './stores/useTransactionsStore';
 import { useUiStore } from './stores/useUiStore';
 import { normalizeRows } from './utils/validator';
+import { useImportHistory } from './composables/useImportHistory';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
 const tx = useTransactionsStore();
 const ui = useUiStore();
+const importHistory = useImportHistory();
 const mappingDone = ref(tx.rows.length > 0);
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
@@ -80,6 +82,7 @@ function applyMapping() {
   const result = normalizeRows(importStore.rows, mappingStore.mapping);
   mappingStore.setIssues(result.issues);
   tx.setRows(result.valid);
+  importHistory.add(importStore.fileName || 'unknown', result.valid.length);
   mappingDone.value = true;
   ui.processing = false;
 }
