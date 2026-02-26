@@ -22,6 +22,7 @@ const filteredRows = computed(() => filterStore.apply(txStore.transactions))
 
 const loadFile = async (file: File) => {
   await txStore.processWorkbook(file)
+  if (txStore.processingError) return
   const years = filterStore.yearsFromData(txStore.transactions).value
   filterStore.selectedYear = years[0] ?? null
 }
@@ -29,6 +30,13 @@ const loadFile = async (file: File) => {
 
 <template>
   <main class="min-h-screen pb-8">
+    <div v-if="txStore.processingError" class="fixed right-4 top-4 z-50 max-w-md rounded-lg border border-rose-200 bg-rose-50 p-3 shadow">
+      <div class="flex items-start gap-3">
+        <p class="text-sm text-rose-700">{{ txStore.processingError }}</p>
+        <button class="rounded px-1 text-rose-600 hover:bg-rose-100" @click="txStore.clearProcessingError">✕</button>
+      </div>
+    </div>
+
     <UploadSplash v-if="!txStore.hasData && !txStore.isProcessing" @file-selected="loadFile" @resume="txStore.hydrateFromLocal" />
     <ProcessingView v-else-if="txStore.isProcessing" :step="txStore.processingStep" :errors="txStore.invalidRows.length" />
     <template v-else>

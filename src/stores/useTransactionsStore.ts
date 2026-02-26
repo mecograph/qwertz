@@ -16,12 +16,16 @@ export const useTransactionsStore = defineStore('transactions', {
     invalidRows: [] as ValidationError[],
     isProcessing: false,
     processingStep: '',
+    processingError: '',
     lastUpdatedAt: ''
   }),
   getters: {
     hasData: (state) => state.transactions.length > 0
   },
   actions: {
+    clearProcessingError() {
+      this.processingError = ''
+    },
     hydrateFromLocal() {
       const saved = loadFromLocal()
       if (!saved) return
@@ -33,24 +37,33 @@ export const useTransactionsStore = defineStore('transactions', {
       this.transactions = []
       this.invalidRows = []
       this.lastUpdatedAt = ''
+      this.processingError = ''
     },
     async processWorkbook(file: File, loadValidOnly = true) {
       this.isProcessing = true
+      this.processingError = ''
       this.processingStep = 'Reading workbook'
-      const workbook = await readWorkbook(file)
 
-      const result = this.processWorkbookInternal(workbook)
-      this.invalidRows = result.invalid
-      this.transactions = loadValidOnly ? result.valid : [...result.valid]
-      saveToLocal(this.transactions)
-      this.lastUpdatedAt = new Date().toISOString()
-      this.isProcessing = false
-      this.processingStep = ''
+      try {
+        const workbook = await readWorkbook(file)
+        const result = this.processWorkbookInternal(workbook)
+
+        this.invalidRows = result.invalid
+        this.transactions = loadValidOnly ? result.valid : [...result.valid]
+        saveToLocal(this.transactions)
+        this.lastUpdatedAt = new Date().toISOString()
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unbekannter Fehler beim Lesen der Datei.'
+        this.processingError = `Upload fehlgeschlagen: ${message}`
+      } finally {
+        this.isProcessing = false
+        this.processingStep = ''
+      }
     },
     processWorkbookInternal(workbook: XLSX.WorkBook): ProcessResult {
       this.processingStep = 'Locate dataset by headers'
       const header = detectHeader(workbook)
-      if (!header) throw new Error('No valid header row with required template columns found.')
+      if (!header) throw new Error('Keine gültige Header-Zeile mit allen erforderlichen Spalten gefunden.')
 
       this.processingStep = 'Extract and validate rows'
       const sheet = workbook.Sheets[header.sheetName]
