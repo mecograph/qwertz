@@ -31,10 +31,12 @@
       </button>
 
       <template v-else>
-        <DashboardSankey v-show="ui.tab === 'Dashboard'" />
-        <ChartsView v-show="ui.tab === 'Charts'" />
-        <DataGrid v-show="ui.tab === 'Data'" />
-        <SettingsView v-show="ui.tab === 'Settings'" />
+        <div class="h-full min-h-0">
+          <DashboardSankey v-show="ui.tab === 'Dashboard'" class="h-full" />
+          <ChartsView v-show="ui.tab === 'Charts'" class="h-full overflow-auto" />
+          <DataGrid v-show="ui.tab === 'Data'" class="h-full" />
+          <SettingsView v-show="ui.tab === 'Settings'" class="h-full overflow-auto" />
+        </div>
       </template>
     </template>
   </AppShell>

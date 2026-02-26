@@ -1,5 +1,5 @@
 <template>
-  <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+  <section class="flex h-full min-h-0 flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
     <div class="flex items-center justify-between gap-3">
       <div>
         <h2 class="text-lg font-semibold">Dashboard Sankey</h2>
@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <VChart class="mt-4 h-[32rem] w-full" :option="option" autoresize aria-label="Sankey chart" @click="onChartClick" />
+    <VChart class="mt-4 min-h-0 flex-1 w-full" :option="option" autoresize aria-label="Sankey chart" @click="onChartClick" />
   </section>
 </template>
 
