@@ -13,32 +13,56 @@ export function computeKpis(rows: Tx[]) {
   return { income, expenses, net, txCount: rows.length, topCategory };
 }
 
-export function buildSankey(rows: Tx[]) {
-  const nodes = [{ name: 'Income' }, { name: 'Budget' }];
-  const links: { source: string; target: string; value: number }[] = [];
+function topNGrouped(entries: Map<string, number>, topN: number) {
+  const sorted = [...entries.entries()].sort((a, b) => b[1] - a[1]);
+  const kept = sorted.slice(0, topN);
+  const rest = sorted.slice(topN);
+  const other = rest.reduce((sum, [, value]) => sum + value, 0);
+  if (other > 0) kept.push(['Other', other]);
+  return kept;
+}
 
-  const income = rows.filter((row) => row.type === 'Income').reduce((acc, row) => acc + row.amount, 0);
-  links.push({ source: 'Income', target: 'Budget', value: income });
+export function buildBudgetSankey(rows: Tx[]) {
+  const incomeByCategory = new Map<string, number>();
+  const expenseByCategory = new Map<string, number>();
 
-  const byCategory = new Map<string, number>();
-  const byLabel = new Map<string, number>();
-
-  rows.filter((row) => row.type === 'Expense').forEach((row) => {
-    byCategory.set(row.category, (byCategory.get(row.category) ?? 0) + row.amountAbs);
-    const labelKey = `${row.category}::${row.label}`;
-    byLabel.set(labelKey, (byLabel.get(labelKey) ?? 0) + row.amountAbs);
+  rows.forEach((row) => {
+    if (row.type === 'Income') incomeByCategory.set(row.category, (incomeByCategory.get(row.category) ?? 0) + row.amountAbs);
+    if (row.type === 'Expense') expenseByCategory.set(row.category, (expenseByCategory.get(row.category) ?? 0) + row.amountAbs);
   });
 
-  byCategory.forEach((value, category) => {
+  const nodes = [{ name: 'Budget' }];
+  const links: { source: string; target: string; value: number }[] = [];
+
+  topNGrouped(incomeByCategory, 12).forEach(([category, value]) => {
+    const source = `Income · ${category}`;
+    nodes.push({ name: source });
+    links.push({ source, target: 'Budget', value });
+  });
+
+  topNGrouped(expenseByCategory, 12).forEach(([category, value]) => {
     nodes.push({ name: category });
     links.push({ source: 'Budget', target: category, value });
   });
 
-  byLabel.forEach((value, key) => {
-    const [category, label] = key.split('::');
-    const full = `${category} / ${label}`;
-    nodes.push({ name: full });
-    links.push({ source: category, target: full, value });
+  return { nodes, links };
+}
+
+export function buildCategoryDrilldownSankey(rows: Tx[], category: string) {
+  const expenses = rows.filter((row) => row.type === 'Expense' && row.category === category);
+  const byLabel = new Map<string, number>();
+
+  expenses.forEach((row) => {
+    byLabel.set(row.label, (byLabel.get(row.label) ?? 0) + row.amountAbs);
+  });
+
+  const nodes = [{ name: category }];
+  const links: { source: string; target: string; value: number }[] = [];
+
+  topNGrouped(byLabel, 20).forEach(([label, value]) => {
+    const target = `${label}`;
+    nodes.push({ name: target });
+    links.push({ source: category, target, value });
   });
 
   return { nodes, links };
