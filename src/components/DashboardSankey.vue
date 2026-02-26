@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between gap-3">
       <div>
         <h2 class="text-lg font-semibold">Dashboard Sankey</h2>
-        <p class="text-xs text-slate-500">Income categories flow into Budget, then Budget flows to spending categories.</p>
+        <p class="text-xs text-slate-500">Income categories flow into Budget, then Budget flows to spending categories. Click a spending category (or Budget → category link) to drill down.</p>
       </div>
       <button v-if="selectedCategory" class="rounded-md border border-slate-300 px-3 py-1.5 text-sm" @click="selectedCategory = ''">
         Back to Budget view
@@ -65,10 +65,20 @@ const option = computed(() => {
   };
 });
 
-function onChartClick(params: { dataType?: string; name?: string }) {
+function onChartClick(params: { dataType?: string; name?: string; data?: { source?: string; target?: string } }) {
   if (selectedCategory.value) return;
-  if (params.dataType !== 'node' || !params.name) return;
-  if (params.name === 'Budget' || params.name.startsWith('Income ·')) return;
-  selectedCategory.value = params.name;
+
+  let candidate = '';
+
+  if (params.dataType === 'node') {
+    candidate = params.name ?? '';
+  }
+
+  if ((params.dataType === 'edge' || params.dataType === 'link') && params.data?.source === 'Budget') {
+    candidate = params.data.target ?? '';
+  }
+
+  if (!candidate || candidate === 'Budget' || candidate === 'Other' || candidate.startsWith('Income ·')) return;
+  selectedCategory.value = candidate;
 }
 </script>
