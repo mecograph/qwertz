@@ -68,8 +68,11 @@
                 </h1>
                 <p class="hidden text-xs text-terminal-muted lg:block">{{ t('app_session') }}</p>
               </div>
-              <div v-if="mode === 'app'" class="min-w-0 flex-1">
-                <slot name="top-right" />
+              <div v-if="mode === 'app'" class="min-w-0 flex flex-1 items-center justify-end gap-2">
+                <div class="min-w-0 flex-1">
+                  <slot name="top-right" />
+                </div>
+                <NotificationCenter />
               </div>
             </div>
           </header>
@@ -107,6 +110,7 @@
 import { computed, watchEffect } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 import { useLocale } from '../composables/useLocale';
+import NotificationCenter from './NotificationCenter.vue';
 
 defineProps<{
   mode: 'splash' | 'wizard' | 'app';

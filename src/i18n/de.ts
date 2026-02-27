@@ -151,6 +151,13 @@ export const de: Record<TranslationKey, string> = {
   settings_purge_message: 'Alle Transaktionsdaten und der Import-Verlauf werden dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
   settings_purge_confirm: 'Löschen',
 
+  // Notifications
+  notifications_button: 'Hinweise',
+  notifications_title: 'Benachrichtigungen',
+  notifications_mark_all_read: 'Alle gelesen',
+  notifications_clear: 'Leeren',
+  notifications_empty: 'Noch keine Benachrichtigungen.',
+
   // Common
   cancel: 'Abbrechen',
 };

@@ -68,6 +68,7 @@ import { normalizeRows } from './utils/validator';
 import { useImportHistory } from './composables/useImportHistory';
 import { useLocale } from './composables/useLocale';
 import { useToastStore } from './stores/useToastStore';
+import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 
 const importStore = useImportStore();
@@ -76,6 +77,7 @@ const tx = useTransactionsStore();
 const ui = useUiStore();
 const importHistory = useImportHistory();
 const toast = useToastStore();
+const notifications = useNotificationStore();
 const { t } = useLocale();
 const mappingDone = ref(tx.rows.length > 0);
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
@@ -104,9 +106,11 @@ async function onUpload(file: File) {
     mappingStore.autoSuggest(importStore.headers);
     mappingDone.value = false;
     toast.push('success', `Imported ${file.name}`);
+    notifications.add('Import complete', `${file.name} uploaded and parsed.`, 'success');
   } catch (error) {
     const appError = toAppError(error, 'Import failed. Please try again.');
     toast.push('error', appError.message, 4200);
+    notifications.add('Import failed', appError.message, 'error');
   } finally {
     ui.processing = false;
   }
@@ -130,9 +134,11 @@ function onImportJson() {
       importHistory.add(file.name, rows.length);
       mappingDone.value = true;
       toast.push('success', `Imported JSON ${file.name}`);
+      notifications.add('JSON import complete', `${file.name} merged into current dataset.`, 'success');
     }).catch((error) => {
       const appError = toAppError(error, 'JSON import failed.');
       toast.push('error', appError.message, 4200);
+      notifications.add('JSON import failed', appError.message, 'error');
     });
   };
   input.click();
@@ -151,12 +157,15 @@ function applyMapping() {
     importHistory.add(importStore.fileName || 'unknown', result.valid.length);
     mappingDone.value = true;
     toast.push('success', `Mapped ${result.valid.length} rows`);
+    notifications.add('Mapping applied', `${result.valid.length} rows are now active.`, 'success');
     if (result.issues.length > 0) {
       toast.push('warning', `${result.issues.length} validation issues found`, 4200);
+      notifications.add('Validation issues', `${result.issues.length} rows need attention.`, 'warning');
     }
   } catch (error) {
     const appError = toAppError(error, 'Failed to apply mapping.');
     toast.push('error', appError.message, 4200);
+    notifications.add('Mapping failed', appError.message, 'error');
   } finally {
     ui.processing = false;
   }

@@ -124,6 +124,7 @@ import { clearRows } from '../utils/storage';
 import { useImportHistory } from '../composables/useImportHistory';
 import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
+import { useNotificationStore } from '../stores/useNotificationStore';
 import TermConfirmModal from './TermConfirmModal.vue';
 
 const emit = defineEmits<{ 'upload-more': [file: File]; 'import-json-more': [] }>();
@@ -135,6 +136,7 @@ const importHistory = useImportHistory();
 const { t, lang } = useLocale();
 const showPurgeConfirm = ref(false);
 const toast = useToastStore();
+const notifications = useNotificationStore();
 
 function formatHistoryDate(ts: number) {
   const loc = lang.value === 'de' ? 'de-DE' : 'en-GB';
@@ -163,5 +165,6 @@ function purge() {
   importHistory.clear();
   showPurgeConfirm.value = false;
   toast.push('info', 'Local data purged');
+  notifications.add('Data purged', 'All local rows and import history have been deleted.', 'warning');
 }
 </script>

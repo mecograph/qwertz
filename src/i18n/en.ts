@@ -149,6 +149,13 @@ export const en = {
   settings_purge_message: 'This will permanently delete all transaction data and import history. This action cannot be undone.',
   settings_purge_confirm: 'Purge',
 
+  // Notifications
+  notifications_button: 'Notifications',
+  notifications_title: 'Notifications',
+  notifications_mark_all_read: 'Mark all read',
+  notifications_clear: 'Clear',
+  notifications_empty: 'No notifications yet.',
+
   // Common
   cancel: 'Cancel',
 } as const;
