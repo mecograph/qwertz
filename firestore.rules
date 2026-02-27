@@ -27,7 +27,10 @@ service cloud.firestore {
         'retentionExpiresAt',
         'extensionUsed',
         'reminderOffsetsSent',
-        'encryptedOriginal'
+        'encryptedOriginal',
+        'revertedAt',
+        'schemaVersion',
+        'mappingConfig'
       ])
       && data.uid == uid
       && data.fileName is string
@@ -47,7 +50,8 @@ service cloud.firestore {
         && newData.createdAt == oldData.createdAt
         && newData.fileName == oldData.fileName
         && newData.fileSize == oldData.fileSize
-        && newData.source == oldData.source;
+        && newData.source == oldData.source
+        && newData.status in ['uploaded', 'processed', 'reverted'];
     }
 
     match /users/{uid} {
@@ -59,6 +63,19 @@ service cloud.firestore {
         allow create: if isOwner(uid) && validImportCreate(request.resource.data, uid);
         allow update: if isOwner(uid) && validImportUpdate(request.resource.data, resource.data, uid);
         allow delete: if isOwner(uid);
+
+        match /events/{eventId} {
+          allow read: if isOwner(uid);
+          allow create: if isOwner(uid)
+            && request.resource.data.type in ['upload', 'parse', 'transform', 'revert', 'download']
+            && request.resource.data.timestamp is int;
+          allow update, delete: if false;
+        }
+      }
+
+      match /quotas/{day} {
+        allow read: if isOwner(uid);
+        allow write: if false;
       }
 
       match /notifications/{notificationId} {
