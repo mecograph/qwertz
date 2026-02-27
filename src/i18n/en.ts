@@ -134,6 +134,7 @@ export const en = {
   settings_data_management: 'Data Management',
   settings_rows_stored: 'Rows stored locally',
   settings_export_json: '[ Export JSON ]',
+  settings_daily_import_usage: 'Import quota used today',
   settings_import_history: 'Import History',
   settings_col_date: 'Date',
   settings_col_filename: 'Filename',

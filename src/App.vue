@@ -70,6 +70,7 @@ import { useLocale } from './composables/useLocale';
 import { useToastStore } from './stores/useToastStore';
 import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
+import { recordImport, validateImport } from './utils/importGuard';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
@@ -100,11 +101,24 @@ onUnmounted(() => {
 });
 
 async function onUpload(file: File) {
+  const decision = validateImport(file.size);
+  if (!decision.allowed) {
+    const reason = decision.reason === 'size_limit'
+      ? 'Import blocked: file is larger than 25 MB.'
+      : decision.reason === 'daily_count_limit'
+        ? 'Import blocked: daily import count limit reached.'
+        : 'Import blocked: daily upload volume limit reached.';
+    toast.push('warning', reason, 4200);
+    notifications.add('Import blocked', reason, 'warning');
+    return;
+  }
+
   try {
     ui.processing = true;
     await importStore.importFile(file);
     mappingStore.autoSuggest(importStore.headers);
     mappingDone.value = false;
+    recordImport(file.size);
     toast.push('success', `Imported ${file.name}`);
     notifications.add('Import complete', `${file.name} uploaded and parsed.`, 'success');
   } catch (error) {
@@ -123,6 +137,18 @@ function onImportJson() {
   input.onchange = () => {
     const file = input.files?.[0];
     if (!file) return;
+
+    const decision = validateImport(file.size);
+    if (!decision.allowed) {
+      const reason = decision.reason === 'size_limit'
+        ? 'Import blocked: file is larger than 25 MB.'
+        : decision.reason === 'daily_count_limit'
+          ? 'Import blocked: daily import count limit reached.'
+          : 'Import blocked: daily upload volume limit reached.';
+      toast.push('warning', reason, 4200);
+      notifications.add('Import blocked', reason, 'warning');
+      return;
+    }
     file.text().then((raw) => {
       const parsed = JSON.parse(raw);
       const rows = parsed.rows ?? [];
@@ -133,6 +159,7 @@ function onImportJson() {
       }
       importHistory.add(file.name, rows.length);
       mappingDone.value = true;
+      recordImport(file.size);
       toast.push('success', `Imported JSON ${file.name}`);
       notifications.add('JSON import complete', `${file.name} merged into current dataset.`, 'success');
     }).catch((error) => {

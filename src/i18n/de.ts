@@ -136,6 +136,7 @@ export const de: Record<TranslationKey, string> = {
   settings_data_management: 'Datenverwaltung',
   settings_rows_stored: 'Lokal gespeicherte Zeilen',
   settings_export_json: '[ JSON exportieren ]',
+  settings_daily_import_usage: 'Import-Kontingent heute genutzt',
   settings_import_history: 'Import-Verlauf',
   settings_col_date: 'Datum',
   settings_col_filename: 'Dateiname',

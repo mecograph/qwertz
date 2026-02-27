@@ -61,6 +61,7 @@
     <div class="term-pane">
       <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_data_management') }}</h2>
       <p class="mt-2 text-sm text-terminal-muted">{{ t('settings_rows_stored') }}: {{ tx.rows.length }}</p>
+      <p class="mt-1 text-xs text-terminal-muted">{{ t('settings_daily_import_usage') }}: {{ quota.count }} / 20 · {{ quotaMb }} MB / 120 MB</p>
       <div class="mt-3 flex flex-wrap gap-2">
         <button class="term-btn" @click="exportJson">{{ t('settings_export_json') }}</button>
       </div>
@@ -116,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useLocaleStore } from '../stores/useLocaleStore';
@@ -125,6 +126,7 @@ import { useImportHistory } from '../composables/useImportHistory';
 import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
+import { getImportQuotaState } from '../utils/importGuard';
 import TermConfirmModal from './TermConfirmModal.vue';
 
 const emit = defineEmits<{ 'upload-more': [file: File]; 'import-json-more': [] }>();
@@ -137,6 +139,8 @@ const { t, lang } = useLocale();
 const showPurgeConfirm = ref(false);
 const toast = useToastStore();
 const notifications = useNotificationStore();
+const quota = computed(() => getImportQuotaState());
+const quotaMb = computed(() => (quota.value.bytes / (1024 * 1024)).toFixed(1));
 
 function formatHistoryDate(ts: number) {
   const loc = lang.value === 'de' ? 'de-DE' : 'en-GB';
