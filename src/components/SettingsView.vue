@@ -79,6 +79,7 @@
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_source') }}</th>
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_status') }}</th>
               <th class="p-2 text-right text-terminal-amber">{{ t('settings_col_rows') }}</th>
+              <th class="p-2 text-right text-terminal-amber">{{ t('settings_col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -88,6 +89,13 @@
               <td class="p-2">{{ record.source }}</td>
               <td class="p-2">{{ record.status }}</td>
               <td class="p-2 text-right">{{ record.rowCount }}</td>
+              <td class="p-2 text-right">
+                <button
+                  v-if="record.hasEncryptedOriginal"
+                  class="term-btn px-2 py-1 text-[11px]"
+                  @click="downloadOriginal(record.id)"
+                >{{ t('settings_download_original') }}</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -205,6 +213,15 @@ function exportJson() {
   a.download = 'tx-state.json';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+async function downloadOriginal(importId: string) {
+  try {
+    await importHistory.downloadOriginal(importId);
+    toast.push('success', t('settings_download_original_ok'));
+  } catch (error) {
+    toast.push('error', error instanceof Error ? error.message : t('settings_download_original_fail'), 4200);
+  }
 }
 
 function exportOpsLog() {

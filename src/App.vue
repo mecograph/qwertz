@@ -76,6 +76,7 @@ import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 import { useOpsLogStore } from './stores/useOpsLogStore';
 import { recordImport, validateImport } from './utils/importGuard';
+import { encryptAndStoreOriginal } from './services/backendClient';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
@@ -130,6 +131,7 @@ async function onUpload(file: File) {
   try {
     if (!auth.user) throw new Error('Not authenticated');
     ui.processing = true;
+    const encryptedOriginal = await encryptAndStoreOriginal(auth.user, file);
     await importStore.importFile(file);
     mappingStore.autoSuggest(importStore.headers);
     mappingDone.value = false;
@@ -138,6 +140,11 @@ async function onUpload(file: File) {
       fileSize: file.size,
       source: 'csv-xlsx',
       status: 'uploaded',
+      mimeType: encryptedOriginal.mimeType,
+      encryptedOriginal: {
+        storageBlobId: encryptedOriginal.storageBlobId,
+        wrappedDek: encryptedOriginal.wrappedDek,
+      },
     });
     toast.push('success', `${t('feedback_import_complete')}: ${file.name}`);
     notifications.add(t('feedback_import_complete'), `${file.name} ${t('feedback_import_complete_desc')}`, 'success');
@@ -174,6 +181,7 @@ function onImportJson() {
     }
     file.text().then(async (raw) => {
       if (!auth.user) throw new Error('Not authenticated');
+      const encryptedOriginal = await encryptAndStoreOriginal(auth.user, file);
       const parsed = JSON.parse(raw);
       const rows = parsed.rows ?? [];
       if (tx.rows.length > 0) {
@@ -185,6 +193,11 @@ function onImportJson() {
         fileSize: file.size,
         source: 'json',
         status: 'processed',
+        mimeType: encryptedOriginal.mimeType,
+        encryptedOriginal: {
+          storageBlobId: encryptedOriginal.storageBlobId,
+          wrappedDek: encryptedOriginal.wrappedDek,
+        },
       });
       mappingDone.value = true;
       recordImport(file.size);

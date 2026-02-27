@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/useAuthStore';
-import { clearImportMeta, createImportMeta, listImportMeta } from '../services/backendClient';
+import { clearImportMeta, createImportMeta, downloadOriginalImport, listImportMeta } from '../services/backendClient';
 
 export interface ImportRecord {
   id: string;
@@ -9,6 +9,7 @@ export interface ImportRecord {
   rowCount: number;
   status: 'uploaded' | 'processed';
   source: 'csv-xlsx' | 'json';
+  hasEncryptedOriginal: boolean;
 }
 
 const history = ref<ImportRecord[]>([]);
@@ -32,6 +33,7 @@ export function useImportHistory() {
         rowCount: doc.rowCount,
         status: doc.status,
         source: doc.source,
+        hasEncryptedOriginal: Boolean(doc.encryptedOriginal),
       }));
   }
 
@@ -39,6 +41,11 @@ export function useImportHistory() {
     fileSize?: number;
     source?: 'csv-xlsx' | 'json';
     status?: 'uploaded' | 'processed';
+    mimeType?: string;
+    encryptedOriginal?: {
+      storageBlobId: string;
+      wrappedDek: { cipherTextB64: string; ivB64: string };
+    };
   }) {
     if (!auth.user) return;
 
@@ -48,9 +55,23 @@ export function useImportHistory() {
       rowCount,
       source: payload?.source ?? 'json',
       status: payload?.status ?? 'processed',
+      mimeType: payload?.mimeType,
+      encryptedOriginal: payload?.encryptedOriginal,
     });
 
     await refresh();
+  }
+
+  async function downloadOriginal(importId: string) {
+    if (!auth.user) return;
+    const result = await downloadOriginalImport(auth.user, importId);
+    const blob = new Blob([result.bytes], { type: result.mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = result.fileName;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   async function clear() {
@@ -63,5 +84,5 @@ export function useImportHistory() {
     history.value = [];
   }
 
-  return { history, add, clear, refresh };
+  return { history, add, clear, refresh, downloadOriginal };
 }
