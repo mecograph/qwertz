@@ -9,6 +9,9 @@
   - `storage.rules`
   - `firestore.indexes.json`
 - Runtime-Checks für inkonsistente Provider-/Env-Konfiguration.
+- Cleanup umgesetzt:
+  - gemeinsamer Firebase-REST-Helper (`src/services/firebaseRest.ts`) zur Reduktion doppelter HTTP-Logik.
+  - Auth-Session-Refresh via Refresh-Token für längere Sessions ergänzt.
 
 ## Noch offen vor Production-Launch
 1. **Firebase-Projekt konfigurieren**
@@ -20,9 +23,8 @@
    - alle `VITE_FIREBASE_*` Werte in Deployment-Environment setzen
    - optional `VITE_FIREBASE_APP_CHECK_SITE_KEY`
 
-3. **Auth-Hardening**
+3. **Auth-Hardening (Restpunkt)**
    - REST-Flow auf offizielles Firebase Web SDK migrieren, sobald Package-Registry-Zugriff verfügbar ist
-   - Refresh-Token-Rotation / Session-Refresh für längere Sessions ergänzen
 
 4. **Backend-Operability**
    - Scheduled Retention-Job in Cloud Functions statt client-triggered Sweep
@@ -31,10 +33,6 @@
 5. **Abuse/Cost Guardrails**
    - serverseitige Quotas/Rate-Limits finalisieren
    - Budget Alerts + Ausfallstrategie (Degradation statt Hard Outage)
-
-6. **Cleanup**
-   - veraltete Mock-Migrationskommentare bereinigen
-   - REST-Helper in gemeinsame Firebase-HTTP Utility extrahieren (weniger Duplikate)
 
 ## Empfohlene Reihenfolge
 1) Config + Rules deployen

@@ -2,6 +2,7 @@ import type { AuthUser } from '../stores/useAuthStore';
 import type { Tx } from '../types';
 import { decryptWithKey, encryptWithKey, generateDataKey, unwrapDataKey, wrapDataKey, type EncryptedPayload } from '../utils/crypto';
 import { getAccessToken } from './authClient';
+import { firebaseJsonRequest, firestoreDocUrl, storageObjectUrl, storageUploadUrl } from './firebaseRest';
 import { getFirebaseConfig } from './firebaseConfig';
 import type { AnalyticsOverview, ImportMetaPayload, PersistedImport, RetentionCheckResult } from './backendClientMock';
 
@@ -16,48 +17,29 @@ function requireFirebaseConfig() {
   return cfg;
 }
 
-function requireAccessToken() {
-  const token = getAccessToken();
+async function requireAccessToken() {
+  const token = await getAccessToken();
   if (!token) throw new Error('Missing Firebase auth token. Please sign in again.');
   return token;
 }
 
-function firestoreDocUrl(projectId: string, path: string) {
-  return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${path}`;
-}
-
-function firestoreCollectionUrl(projectId: string, path: string) {
-  return firestoreDocUrl(projectId, path);
-}
-
-function storageObjectUrl(bucket: string, objectPath: string) {
-  const encodedPath = encodeURIComponent(objectPath);
-  return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o/${encodedPath}`;
-}
-
-function storageUploadUrl(bucket: string, objectPath: string) {
-  return `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket)}/o?name=${encodeURIComponent(objectPath)}`;
-}
 
 async function requestJson<T>(url: string, init: RequestInit = {}, allow404 = false): Promise<T | null> {
-  const token = requireAccessToken();
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      authorization: `Bearer ${token}`,
-      ...(init.body ? { 'content-type': 'application/json' } : {}),
-      ...(init.headers ?? {}),
-    },
-  });
-
-  if (allow404 && response.status === 404) return null;
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Firebase backend request failed (${response.status}): ${body || 'unknown error'}`);
+  const token = await requireAccessToken();
+  const method = init.method ?? 'GET';
+  let body: Record<string, unknown> | undefined;
+  if (typeof init.body === 'string') {
+    body = JSON.parse(init.body) as Record<string, unknown>;
   }
 
-  const text = await response.text();
-  return text ? (JSON.parse(text) as T) : null;
+  return firebaseJsonRequest<T>({
+    url,
+    method,
+    body,
+    allow404,
+    bearerToken: token,
+    headers: (init.headers ?? {}) as Record<string, string>,
+  });
 }
 
 function asString(v?: { stringValue?: string }) {
@@ -196,7 +178,7 @@ export async function encryptAndStoreOriginal(user: AuthUser, file: File) {
   const storageBlobId = `users/${user.uid}/imports/${crypto.randomUUID()}/original.enc.json`;
   const serializedPayload = JSON.stringify(payload);
 
-  const token = requireAccessToken();
+  const token = await requireAccessToken();
   const response = await fetch(storageUploadUrl(storageBucket, storageBlobId), {
     method: 'POST',
     headers: {
@@ -226,7 +208,7 @@ export async function downloadOriginalImport(user: AuthUser, importId: string) {
   const imp = await fetchImport(user, importId);
   if (!imp?.encryptedOriginal) throw new Error('Original file not available.');
 
-  const token = requireAccessToken();
+  const token = await requireAccessToken();
   const encryptedRes = await fetch(`${storageObjectUrl(storageBucket, imp.encryptedOriginal.storageBlobId)}?alt=media`, {
     headers: { authorization: `Bearer ${token}` },
   });
@@ -316,7 +298,7 @@ export async function runRetentionCheck(user: AuthUser): Promise<RetentionCheckR
 export async function listImportMeta(user: AuthUser) {
   const { projectId } = requireFirebaseConfig();
   const response = await requestJson<{ documents?: any[] }>(
-    firestoreCollectionUrl(projectId, importsCollectionPath(user.uid)),
+    firestoreDocUrl(projectId, importsCollectionPath(user.uid)),
     {},
     true,
   );

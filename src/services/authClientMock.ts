@@ -47,6 +47,6 @@ export function signOut() {
   persist(null);
 }
 
-export function getAccessToken() {
+export async function getAccessToken() {
   return null;
 }

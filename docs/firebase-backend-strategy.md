@@ -452,3 +452,11 @@ Für den nächsten Migrationsschritt wurden die operativen Baselines ergänzt:
 - `storage.rules` mit UID-gebundenem Zugriff und Upload-Constraints für encrypted blobs.
 - `firebase.json` + `firestore.indexes.json` für deploybare Firebase-Konfiguration.
 - Runtime-Checks beim App-Start warnen bei fehlenden Firebase-Keys oder inkonsistentem Provider-Setup.
+
+### Update: Cleanup + Auth Session Refresh
+
+Weitere umsetzbare TODOs wurden ergänzt:
+- gemeinsamer Firebase-REST-Helper (`firebaseRest.ts`) für wiederverwendbare URL-/Request-Logik,
+- Auth-Session-Refresh über Refresh-Token im REST-Auth-Flow, damit Sessions nicht sofort nach Token-Ablauf abbrechen.
+
+Offen bleibt weiterhin die geplante Migration auf das offizielle Firebase Web SDK, sobald der Package-Registry-Zugriff wieder funktioniert.

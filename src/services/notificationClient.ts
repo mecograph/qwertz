@@ -1,6 +1,7 @@
 import type { AuthUser } from '../stores/useAuthStore';
 import { getAccessToken } from './authClient';
 import { getFirebaseConfig } from './firebaseConfig';
+import { firebaseJsonRequest, firestoreDocUrl } from './firebaseRest';
 
 export type NotificationSeverity = 'info' | 'success' | 'warning' | 'error';
 
@@ -94,16 +95,11 @@ function requireFirebaseConfig() {
   return cfg;
 }
 
-function requireToken() {
-  const token = getAccessToken();
+async function requireToken() {
+  const token = await getAccessToken();
   if (!token) throw new Error('Missing Firebase auth token for notifications backend.');
   return token;
 }
-
-function docUrl(projectId: string, path: string) {
-  return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/${path}`;
-}
-
 function collectionPath(uid: string) {
   return `users/${uid}/notifications`;
 }
@@ -113,23 +109,21 @@ function notificationPath(uid: string, id: string) {
 }
 
 async function fireReq<T>(url: string, init: RequestInit = {}, allow404 = false): Promise<T | null> {
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      authorization: `Bearer ${requireToken()}`,
-      ...(init.body ? { 'content-type': 'application/json' } : {}),
-      ...(init.headers ?? {}),
-    },
-  });
-
-  if (allow404 && res.status === 404) return null;
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Notifications request failed (${res.status}): ${body || 'unknown error'}`);
+  const token = await requireToken();
+  const method = init.method ?? 'GET';
+  let body: Record<string, unknown> | undefined;
+  if (typeof init.body === 'string') {
+    body = JSON.parse(init.body) as Record<string, unknown>;
   }
 
-  const txt = await res.text();
-  return txt ? (JSON.parse(txt) as T) : null;
+  return firebaseJsonRequest<T>({
+    url,
+    method,
+    body,
+    allow404,
+    bearerToken: token,
+    headers: (init.headers ?? {}) as Record<string, string>,
+  });
 }
 
 function toFields(item: AppNotification) {
@@ -160,7 +154,7 @@ const firebaseClient: NotificationClient = {
   async list(user) {
     if (!user) return [];
     const { projectId } = requireFirebaseConfig();
-    const res = await fireReq<{ documents?: any[] }>(docUrl(projectId, collectionPath(user.uid)), {}, true);
+    const res = await fireReq<{ documents?: any[] }>(firestoreDocUrl(projectId, collectionPath(user.uid)), {}, true);
     return (res?.documents ?? []).map(parseDoc).sort((a, b) => b.createdAt - a.createdAt);
   },
   async create(user, payload) {
@@ -174,7 +168,7 @@ const firebaseClient: NotificationClient = {
       createdAt: Date.now(),
       readAt: null,
     };
-    await fireReq(docUrl(projectId, notificationPath(user.uid, item.id)), {
+    await fireReq(firestoreDocUrl(projectId, notificationPath(user.uid, item.id)), {
       method: 'PATCH',
       body: JSON.stringify(toFields(item)),
     });
@@ -183,11 +177,11 @@ const firebaseClient: NotificationClient = {
   async markRead(user, id) {
     if (!user) return;
     const { projectId } = requireFirebaseConfig();
-    const current = await fireReq<any>(docUrl(projectId, notificationPath(user.uid, id)), {}, true);
+    const current = await fireReq<any>(firestoreDocUrl(projectId, notificationPath(user.uid, id)), {}, true);
     if (!current) return;
     const parsed = parseDoc(current);
     const next: AppNotification = { ...parsed, readAt: parsed.readAt ?? Date.now() };
-    await fireReq(docUrl(projectId, notificationPath(user.uid, id)), {
+    await fireReq(firestoreDocUrl(projectId, notificationPath(user.uid, id)), {
       method: 'PATCH',
       body: JSON.stringify(toFields(next)),
     });
@@ -206,7 +200,7 @@ const firebaseClient: NotificationClient = {
     const { projectId } = requireFirebaseConfig();
     const items = await this.list(user);
     for (const item of items) {
-      await fireReq(docUrl(projectId, notificationPath(user.uid, item.id)), { method: 'DELETE' }, true);
+      await fireReq(firestoreDocUrl(projectId, notificationPath(user.uid, item.id)), { method: 'DELETE' }, true);
     }
   },
 };
