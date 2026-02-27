@@ -264,25 +264,25 @@ function toggleMenu(id: string) {
 function duplicate(id: string) {
   tx.duplicateRow(id);
   openMenu.value = null;
-  toast.push('success', 'Row duplicated');
-  notifications.add('Row duplicated', 'A transaction row was duplicated in the grid.', 'info');
+  toast.push('success', t('feedback_row_duplicated'));
+  notifications.add(t('feedback_row_duplicated'), t('feedback_row_duplicated_desc'), 'info');
 }
 
 function remove(id: string) {
   tx.deleteRow(id);
   openMenu.value = null;
-  toast.push('warning', 'Row deleted');
-  notifications.add('Row deleted', 'A transaction row was removed from the grid.', 'warning');
+  toast.push('warning', t('feedback_row_deleted'));
+  notifications.add(t('feedback_row_deleted'), t('feedback_row_deleted_desc'), 'warning');
 }
 
 function undo() {
   tx.undo();
-  toast.push('info', 'Undo applied');
+  toast.push('info', t('feedback_undo_applied'));
 }
 
 function redo() {
   tx.redo();
-  toast.push('info', 'Redo applied');
+  toast.push('info', t('feedback_redo_applied'));
 }
 
 function onDocClick() {

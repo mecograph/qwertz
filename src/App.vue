@@ -104,12 +104,12 @@ async function onUpload(file: File) {
   const decision = validateImport(file.size);
   if (!decision.allowed) {
     const reason = decision.reason === 'size_limit'
-      ? 'Import blocked: file is larger than 25 MB.'
+      ? t('feedback_import_blocked_size')
       : decision.reason === 'daily_count_limit'
-        ? 'Import blocked: daily import count limit reached.'
-        : 'Import blocked: daily upload volume limit reached.';
+        ? t('feedback_import_blocked_daily_count')
+        : t('feedback_import_blocked_daily_bytes');
     toast.push('warning', reason, 4200);
-    notifications.add('Import blocked', reason, 'warning');
+    notifications.add(t('feedback_import_blocked'), reason, 'warning');
     return;
   }
 
@@ -119,12 +119,12 @@ async function onUpload(file: File) {
     mappingStore.autoSuggest(importStore.headers);
     mappingDone.value = false;
     recordImport(file.size);
-    toast.push('success', `Imported ${file.name}`);
-    notifications.add('Import complete', `${file.name} uploaded and parsed.`, 'success');
+    toast.push('success', `${t('feedback_import_complete')}: ${file.name}`);
+    notifications.add(t('feedback_import_complete'), `${file.name} ${t('feedback_import_complete_desc')}`, 'success');
   } catch (error) {
     const appError = toAppError(error, 'Import failed. Please try again.');
     toast.push('error', appError.message, 4200);
-    notifications.add('Import failed', appError.message, 'error');
+    notifications.add(t('feedback_import_failed'), appError.message, 'error');
   } finally {
     ui.processing = false;
   }
@@ -141,12 +141,12 @@ function onImportJson() {
     const decision = validateImport(file.size);
     if (!decision.allowed) {
       const reason = decision.reason === 'size_limit'
-        ? 'Import blocked: file is larger than 25 MB.'
+        ? t('feedback_import_blocked_size')
         : decision.reason === 'daily_count_limit'
-          ? 'Import blocked: daily import count limit reached.'
-          : 'Import blocked: daily upload volume limit reached.';
+          ? t('feedback_import_blocked_daily_count')
+          : t('feedback_import_blocked_daily_bytes');
       toast.push('warning', reason, 4200);
-      notifications.add('Import blocked', reason, 'warning');
+      notifications.add(t('feedback_import_blocked'), reason, 'warning');
       return;
     }
     file.text().then((raw) => {
@@ -160,12 +160,12 @@ function onImportJson() {
       importHistory.add(file.name, rows.length);
       mappingDone.value = true;
       recordImport(file.size);
-      toast.push('success', `Imported JSON ${file.name}`);
-      notifications.add('JSON import complete', `${file.name} merged into current dataset.`, 'success');
+      toast.push('success', `${t('feedback_json_import_complete')}: ${file.name}`);
+      notifications.add(t('feedback_json_import_complete'), `${file.name} ${t('feedback_json_import_complete_desc')}`, 'success');
     }).catch((error) => {
       const appError = toAppError(error, 'JSON import failed.');
       toast.push('error', appError.message, 4200);
-      notifications.add('JSON import failed', appError.message, 'error');
+      notifications.add(t('feedback_json_import_failed'), appError.message, 'error');
     });
   };
   input.click();
@@ -183,16 +183,16 @@ function applyMapping() {
     }
     importHistory.add(importStore.fileName || 'unknown', result.valid.length);
     mappingDone.value = true;
-    toast.push('success', `Mapped ${result.valid.length} rows`);
-    notifications.add('Mapping applied', `${result.valid.length} rows are now active.`, 'success');
+    toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
+    notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');
     if (result.issues.length > 0) {
-      toast.push('warning', `${result.issues.length} validation issues found`, 4200);
-      notifications.add('Validation issues', `${result.issues.length} rows need attention.`, 'warning');
+      toast.push('warning', `${result.issues.length} ${t('feedback_mapping_issues')}`, 4200);
+      notifications.add(t('feedback_mapping_issues'), `${result.issues.length} ${t('feedback_mapping_issues_desc')}`, 'warning');
     }
   } catch (error) {
     const appError = toAppError(error, 'Failed to apply mapping.');
     toast.push('error', appError.message, 4200);
-    notifications.add('Mapping failed', appError.message, 'error');
+    notifications.add(t('feedback_mapping_failed'), appError.message, 'error');
   } finally {
     ui.processing = false;
   }

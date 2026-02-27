@@ -168,7 +168,7 @@ function purge() {
   tx.setRows([]);
   importHistory.clear();
   showPurgeConfirm.value = false;
-  toast.push('info', 'Local data purged');
-  notifications.add('Data purged', 'All local rows and import history have been deleted.', 'warning');
+  toast.push('info', t('feedback_data_purged'));
+  notifications.add(t('feedback_data_purged_title'), t('feedback_data_purged_desc'), 'warning');
 }
 </script>

@@ -159,6 +159,32 @@ export const de: Record<TranslationKey, string> = {
   notifications_clear: 'Leeren',
   notifications_empty: 'Noch keine Benachrichtigungen.',
 
+  // Feedback
+  feedback_import_blocked_size: 'Import blockiert: Datei ist größer als 25 MB.',
+  feedback_import_blocked_daily_count: 'Import blockiert: Tageslimit für Anzahl Importe erreicht.',
+  feedback_import_blocked_daily_bytes: 'Import blockiert: Tageslimit für Upload-Volumen erreicht.',
+  feedback_import_complete: 'Import abgeschlossen',
+  feedback_import_complete_desc: 'hochgeladen und verarbeitet.',
+  feedback_import_failed: 'Import fehlgeschlagen',
+  feedback_import_blocked: 'Import blockiert',
+  feedback_json_import_complete: 'JSON-Import abgeschlossen',
+  feedback_json_import_complete_desc: 'in den aktuellen Datensatz übernommen.',
+  feedback_json_import_failed: 'JSON-Import fehlgeschlagen',
+  feedback_mapping_applied: 'Mapping angewendet',
+  feedback_mapping_applied_desc: 'Zeilen sind jetzt aktiv.',
+  feedback_mapping_issues: 'Validierungsprobleme gefunden',
+  feedback_mapping_issues_desc: 'Zeilen benötigen Aufmerksamkeit.',
+  feedback_mapping_failed: 'Mapping fehlgeschlagen',
+  feedback_data_purged: 'Lokale Daten gelöscht',
+  feedback_data_purged_title: 'Daten gelöscht',
+  feedback_data_purged_desc: 'Alle lokalen Zeilen und der Import-Verlauf wurden gelöscht.',
+  feedback_row_duplicated: 'Zeile dupliziert',
+  feedback_row_duplicated_desc: 'Eine Transaktionszeile wurde dupliziert.',
+  feedback_row_deleted: 'Zeile gelöscht',
+  feedback_row_deleted_desc: 'Eine Transaktionszeile wurde entfernt.',
+  feedback_undo_applied: 'Rückgängig ausgeführt',
+  feedback_redo_applied: 'Wiederherstellen ausgeführt',
+
   // Common
   cancel: 'Abbrechen',
 };

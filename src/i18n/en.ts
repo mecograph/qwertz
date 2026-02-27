@@ -157,6 +157,32 @@ export const en = {
   notifications_clear: 'Clear',
   notifications_empty: 'No notifications yet.',
 
+  // Feedback
+  feedback_import_blocked_size: 'Import blocked: file is larger than 25 MB.',
+  feedback_import_blocked_daily_count: 'Import blocked: daily import count limit reached.',
+  feedback_import_blocked_daily_bytes: 'Import blocked: daily upload volume limit reached.',
+  feedback_import_complete: 'Import complete',
+  feedback_import_complete_desc: 'uploaded and parsed.',
+  feedback_import_failed: 'Import failed',
+  feedback_import_blocked: 'Import blocked',
+  feedback_json_import_complete: 'JSON import complete',
+  feedback_json_import_complete_desc: 'merged into current dataset.',
+  feedback_json_import_failed: 'JSON import failed',
+  feedback_mapping_applied: 'Mapping applied',
+  feedback_mapping_applied_desc: 'rows are now active.',
+  feedback_mapping_issues: 'validation issues found',
+  feedback_mapping_issues_desc: 'rows need attention.',
+  feedback_mapping_failed: 'Mapping failed',
+  feedback_data_purged: 'Local data purged',
+  feedback_data_purged_title: 'Data purged',
+  feedback_data_purged_desc: 'All local rows and import history have been deleted.',
+  feedback_row_duplicated: 'Row duplicated',
+  feedback_row_duplicated_desc: 'A transaction row was duplicated in the grid.',
+  feedback_row_deleted: 'Row deleted',
+  feedback_row_deleted_desc: 'A transaction row was removed from the grid.',
+  feedback_undo_applied: 'Undo applied',
+  feedback_redo_applied: 'Redo applied',
+
   // Common
   cancel: 'Cancel',
 } as const;
