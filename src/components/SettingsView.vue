@@ -78,6 +78,7 @@
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_filename') }}</th>
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_source') }}</th>
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_status') }}</th>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_expires') }}</th>
               <th class="p-2 text-right text-terminal-amber">{{ t('settings_col_rows') }}</th>
               <th class="p-2 text-right text-terminal-amber">{{ t('settings_col_actions') }}</th>
             </tr>
@@ -88,13 +89,23 @@
               <td class="p-2">{{ record.fileName }}</td>
               <td class="p-2">{{ record.source }}</td>
               <td class="p-2">{{ record.status }}</td>
+              <td class="p-2">
+                <span :class="record.daysUntilExpiry <= 7 ? 'text-terminal-amber' : 'text-terminal-muted'">{{ formatExpiry(record.daysUntilExpiry) }}</span>
+              </td>
               <td class="p-2 text-right">{{ record.rowCount }}</td>
               <td class="p-2 text-right">
-                <button
-                  v-if="record.hasEncryptedOriginal"
-                  class="term-btn px-2 py-1 text-[11px]"
-                  @click="downloadOriginal(record.id)"
-                >{{ t('settings_download_original') }}</button>
+                <div class="flex justify-end gap-2">
+                  <button
+                    v-if="record.hasEncryptedOriginal"
+                    class="term-btn px-2 py-1 text-[11px]"
+                    @click="downloadOriginal(record.id)"
+                  >{{ t('settings_download_original') }}</button>
+                  <button
+                    v-if="!record.extensionUsed"
+                    class="term-btn px-2 py-1 text-[11px]"
+                    @click="extendRetention(record.id)"
+                  >{{ t('settings_extend_retention') }}</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -213,6 +224,22 @@ function exportJson() {
   a.download = 'tx-state.json';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+
+function formatExpiry(days: number) {
+  if (days <= 0) return t('settings_expired');
+  return `${days} ${t('settings_days_left')}`;
+}
+
+async function extendRetention(importId: string) {
+  const ok = await importHistory.extendRetention(importId);
+  if (ok) {
+    toast.push('success', t('settings_extend_retention_ok'));
+    notifications.add(t('settings_extend_retention_ok'), t('settings_extend_retention_desc'), 'success');
+  } else {
+    toast.push('warning', t('settings_extend_retention_fail'), 4200);
+  }
 }
 
 async function downloadOriginal(importId: string) {

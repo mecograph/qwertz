@@ -1,6 +1,9 @@
 import type { AuthUser } from '../stores/useAuthStore';
 import { decryptWithKey, encryptWithKey, generateDataKey, unwrapDataKey, wrapDataKey, type EncryptedPayload } from '../utils/crypto';
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const ONE_YEAR_MS = 365 * ONE_DAY_MS;
+
 export interface ImportMetaPayload {
   fileName: string;
   fileSize: number;
@@ -19,12 +22,20 @@ export interface PersistedImport extends ImportMetaPayload {
   uid: string;
   createdAt: number;
   updatedAt: number;
+  retentionExpiresAt: number;
+  extensionUsed: boolean;
+  reminderOffsetsSent: number[];
 }
 
 interface StoredBlob {
   id: string;
   uid: string;
   payload: EncryptedPayload;
+}
+
+export interface RetentionCheckResult {
+  reminders: Array<{ importId: string; fileName: string; daysLeft: number }>;
+  expired: Array<{ importId: string; fileName: string }>;
 }
 
 const IMPORTS_KEY = 'tx-backend-imports-v1';
@@ -103,6 +114,9 @@ export async function createImportMeta(user: AuthUser, payload: ImportMetaPayloa
     uid: user.uid,
     createdAt: now,
     updatedAt: now,
+    retentionExpiresAt: now + ONE_YEAR_MS,
+    extensionUsed: false,
+    reminderOffsetsSent: [],
     ...payload,
   };
 
@@ -110,6 +124,62 @@ export async function createImportMeta(user: AuthUser, payload: ImportMetaPayloa
   items.unshift(entry);
   persistImports(items.slice(0, 1000));
   return entry;
+}
+
+export async function extendImportRetentionOnce(user: AuthUser, importId: string) {
+  const items = loadImports();
+  let updated = false;
+  const next = items.map((item) => {
+    if (item.uid !== user.uid || item.id !== importId) return item;
+    if (item.extensionUsed) return item;
+    updated = true;
+    return {
+      ...item,
+      extensionUsed: true,
+      retentionExpiresAt: item.retentionExpiresAt + ONE_YEAR_MS,
+      updatedAt: Date.now(),
+      reminderOffsetsSent: [],
+    };
+  });
+  if (updated) persistImports(next);
+  return updated;
+}
+
+export async function runRetentionCheck(user: AuthUser): Promise<RetentionCheckResult> {
+  const now = Date.now();
+  const targetOffsets = [30, 7, 1];
+  const reminders: RetentionCheckResult['reminders'] = [];
+  const expired: RetentionCheckResult['expired'] = [];
+
+  const imports = loadImports();
+  const expiredBlobIds = new Set<string>();
+
+  const next = imports.flatMap((item) => {
+    if (item.uid !== user.uid) return [item];
+
+    const daysLeft = Math.ceil((item.retentionExpiresAt - now) / ONE_DAY_MS);
+    if (daysLeft <= 0) {
+      expired.push({ importId: item.id, fileName: item.fileName });
+      if (item.encryptedOriginal?.storageBlobId) expiredBlobIds.add(item.encryptedOriginal.storageBlobId);
+      return [];
+    }
+
+    const reminder = targetOffsets.find((offset) => offset === daysLeft && !item.reminderOffsetsSent.includes(offset));
+    if (reminder) {
+      reminders.push({ importId: item.id, fileName: item.fileName, daysLeft });
+      return [{ ...item, reminderOffsetsSent: [...item.reminderOffsetsSent, reminder], updatedAt: now }];
+    }
+
+    return [item];
+  });
+
+  if (expiredBlobIds.size > 0) {
+    const blobs = loadBlobs().filter((blob) => !expiredBlobIds.has(blob.id));
+    persistBlobs(blobs);
+  }
+
+  persistImports(next);
+  return { reminders, expired };
 }
 
 export async function listImportMeta(user: AuthUser) {

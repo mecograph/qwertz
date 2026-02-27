@@ -100,10 +100,25 @@ const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
 
 const handleHashChange = () => ui.syncTabFromLocation();
 
+async function runRetentionSweepWithFeedback() {
+  const result = await importHistory.runRetentionSweep();
+  result.reminders.forEach((item) => {
+    const msg = `${item.fileName}: ${item.daysLeft} ${t('feedback_retention_days_left')}`;
+    notifications.add(t('feedback_retention_reminder'), msg, 'warning');
+    opsLog.add('warning', 'retention.reminder', msg);
+  });
+
+  result.expired.forEach((item) => {
+    notifications.add(t('feedback_retention_expired'), item.fileName, 'warning');
+    opsLog.add('warning', 'retention.expired', item.fileName);
+  });
+}
+
 onMounted(() => {
   ui.syncTabFromLocation();
   window.addEventListener('hashchange', handleHashChange);
   importHistory.refresh();
+  runRetentionSweepWithFeedback();
 });
 
 onUnmounted(() => {
@@ -112,6 +127,7 @@ onUnmounted(() => {
 
 watch(() => auth.user?.uid, () => {
   importHistory.refresh();
+  runRetentionSweepWithFeedback();
 });
 
 async function onUpload(file: File) {

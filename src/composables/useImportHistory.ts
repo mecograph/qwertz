@@ -1,6 +1,8 @@
 import { ref } from 'vue';
+import { clearImportMeta, createImportMeta, downloadOriginalImport, extendImportRetentionOnce, listImportMeta, runRetentionCheck } from '../services/backendClient';
 import { useAuthStore } from '../stores/useAuthStore';
-import { clearImportMeta, createImportMeta, downloadOriginalImport, listImportMeta } from '../services/backendClient';
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface ImportRecord {
   id: string;
@@ -10,6 +12,9 @@ export interface ImportRecord {
   status: 'uploaded' | 'processed';
   source: 'csv-xlsx' | 'json';
   hasEncryptedOriginal: boolean;
+  retentionExpiresAt: number;
+  extensionUsed: boolean;
+  daysUntilExpiry: number;
 }
 
 const history = ref<ImportRecord[]>([]);
@@ -34,6 +39,9 @@ export function useImportHistory() {
         status: doc.status,
         source: doc.source,
         hasEncryptedOriginal: Boolean(doc.encryptedOriginal),
+        retentionExpiresAt: doc.retentionExpiresAt,
+        extensionUsed: doc.extensionUsed,
+        daysUntilExpiry: Math.ceil((doc.retentionExpiresAt - Date.now()) / ONE_DAY_MS),
       }));
   }
 
@@ -74,6 +82,20 @@ export function useImportHistory() {
     URL.revokeObjectURL(url);
   }
 
+  async function extendRetention(importId: string) {
+    if (!auth.user) return false;
+    const updated = await extendImportRetentionOnce(auth.user, importId);
+    await refresh();
+    return updated;
+  }
+
+  async function runRetentionSweep() {
+    if (!auth.user) return { reminders: [], expired: [] };
+    const result = await runRetentionCheck(auth.user);
+    await refresh();
+    return result;
+  }
+
   async function clear() {
     if (!auth.user) {
       history.value = [];
@@ -84,5 +106,5 @@ export function useImportHistory() {
     history.value = [];
   }
 
-  return { history, add, clear, refresh, downloadOriginal };
+  return { history, add, clear, refresh, downloadOriginal, extendRetention, runRetentionSweep };
 }
