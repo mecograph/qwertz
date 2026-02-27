@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import AppShell from './components/AppShell.vue';
 import UploadSplash from './components/UploadSplash.vue';
 import SourceSelect from './components/SourceSelect.vue';
@@ -76,7 +76,6 @@ import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 import { useOpsLogStore } from './stores/useOpsLogStore';
 import { recordImport, validateImport } from './utils/importGuard';
-import { createImportMeta } from './services/backendClient';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
@@ -103,10 +102,15 @@ const handleHashChange = () => ui.syncTabFromLocation();
 onMounted(() => {
   ui.syncTabFromLocation();
   window.addEventListener('hashchange', handleHashChange);
+  importHistory.refresh();
 });
 
 onUnmounted(() => {
   window.removeEventListener('hashchange', handleHashChange);
+});
+
+watch(() => auth.user?.uid, () => {
+  importHistory.refresh();
 });
 
 async function onUpload(file: File) {
@@ -130,10 +134,8 @@ async function onUpload(file: File) {
     mappingStore.autoSuggest(importStore.headers);
     mappingDone.value = false;
     recordImport(file.size);
-    await createImportMeta(auth.user, {
-      fileName: file.name,
+    await importHistory.add(file.name, importStore.rows.length, {
       fileSize: file.size,
-      rowCount: importStore.rows.length,
       source: 'csv-xlsx',
       status: 'uploaded',
     });
@@ -179,16 +181,13 @@ function onImportJson() {
       } else {
         tx.setRows(rows);
       }
-      importHistory.add(file.name, rows.length);
-      mappingDone.value = true;
-      recordImport(file.size);
-      await createImportMeta(auth.user, {
-        fileName: file.name,
+      await importHistory.add(file.name, rows.length, {
         fileSize: file.size,
-        rowCount: rows.length,
         source: 'json',
         status: 'processed',
       });
+      mappingDone.value = true;
+      recordImport(file.size);
       toast.push('success', `${t('feedback_json_import_complete')}: ${file.name}`);
       notifications.add(t('feedback_json_import_complete'), `${file.name} ${t('feedback_json_import_complete_desc')}`, 'success');
       opsLog.add('info', 'import.json.complete', file.name);
@@ -202,7 +201,7 @@ function onImportJson() {
   input.click();
 }
 
-function applyMapping() {
+async function applyMapping() {
   try {
     ui.processing = true;
     const result = normalizeRows(importStore.rows, mappingStore.mapping);
@@ -212,7 +211,7 @@ function applyMapping() {
     } else {
       tx.setRows(result.valid);
     }
-    importHistory.add(importStore.fileName || 'unknown', result.valid.length);
+    await importHistory.add(importStore.fileName || 'unknown', result.valid.length, { source: 'csv-xlsx', status: 'processed' });
     mappingDone.value = true;
     toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
     notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');

@@ -145,6 +145,8 @@ export const en = {
   settings_log_message: 'Message',
   settings_col_date: 'Date',
   settings_col_filename: 'Filename',
+  settings_col_source: 'Source',
+  settings_col_status: 'Status',
   settings_col_rows: 'Rows',
   settings_no_imports: 'No imports recorded yet.',
   settings_danger_zone: 'Danger Zone',

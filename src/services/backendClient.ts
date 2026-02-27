@@ -8,14 +8,14 @@ export interface ImportMetaPayload {
   status: 'uploaded' | 'processed';
 }
 
-const STORAGE_KEY = 'tx-backend-imports-v1';
-
-interface PersistedImport extends ImportMetaPayload {
+export interface PersistedImport extends ImportMetaPayload {
   id: string;
   uid: string;
   createdAt: number;
   updatedAt: number;
 }
+
+const STORAGE_KEY = 'tx-backend-imports-v1';
 
 function load(): PersistedImport[] {
   try {
@@ -31,8 +31,8 @@ function persist(items: PersistedImport[]) {
 }
 
 /**
- * Step-1 backend path placeholder.
- * This mirrors the shape of a Firestore write and can be replaced by Firebase SDK writes.
+ * Step-2 backend path placeholder.
+ * Mirrors Firestore import document writes and reads by uid.
  */
 export async function createImportMeta(user: AuthUser, payload: ImportMetaPayload) {
   const now = Date.now();
@@ -46,10 +46,15 @@ export async function createImportMeta(user: AuthUser, payload: ImportMetaPayloa
 
   const items = load();
   items.unshift(entry);
-  persist(items.slice(0, 500));
+  persist(items.slice(0, 1000));
   return entry;
 }
 
 export async function listImportMeta(user: AuthUser) {
   return load().filter((item) => item.uid === user.uid);
+}
+
+export async function clearImportMeta(user: AuthUser) {
+  const next = load().filter((item) => item.uid !== user.uid);
+  persist(next);
 }

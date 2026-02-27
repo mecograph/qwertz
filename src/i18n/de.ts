@@ -147,6 +147,8 @@ export const de: Record<TranslationKey, string> = {
   settings_log_message: 'Meldung',
   settings_col_date: 'Datum',
   settings_col_filename: 'Dateiname',
+  settings_col_source: 'Quelle',
+  settings_col_status: 'Status',
   settings_col_rows: 'Zeilen',
   settings_no_imports: 'Noch keine Importe aufgezeichnet.',
   settings_danger_zone: 'Gefahrenzone',

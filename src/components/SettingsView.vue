@@ -76,6 +76,8 @@
             <tr>
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_date') }}</th>
               <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_filename') }}</th>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_source') }}</th>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_status') }}</th>
               <th class="p-2 text-right text-terminal-amber">{{ t('settings_col_rows') }}</th>
             </tr>
           </thead>
@@ -83,6 +85,8 @@
             <tr v-for="record in importHistory.history.value" :key="record.id" class="border-t border-terminal-border">
               <td class="p-2">{{ formatHistoryDate(record.timestamp) }}</td>
               <td class="p-2">{{ record.fileName }}</td>
+              <td class="p-2">{{ record.source }}</td>
+              <td class="p-2">{{ record.status }}</td>
               <td class="p-2 text-right">{{ record.rowCount }}</td>
             </tr>
           </tbody>
@@ -151,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useLocaleStore } from '../stores/useLocaleStore';
@@ -177,6 +181,10 @@ const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
 const quota = computed(() => getImportQuotaState());
 const quotaMb = computed(() => (quota.value.bytes / (1024 * 1024)).toFixed(1));
+
+onMounted(() => {
+  importHistory.refresh();
+});
 
 function formatHistoryDate(ts: number) {
   const loc = lang.value === 'de' ? 'de-DE' : 'en-GB';
@@ -209,10 +217,10 @@ function exportOpsLog() {
   URL.revokeObjectURL(url);
 }
 
-function purge() {
+async function purge() {
   clearRows();
   tx.setRows([]);
-  importHistory.clear();
+  await importHistory.clear();
   showPurgeConfirm.value = false;
   toast.push('info', t('feedback_data_purged'));
   notifications.add(t('feedback_data_purged_title'), t('feedback_data_purged_desc'), 'warning');
