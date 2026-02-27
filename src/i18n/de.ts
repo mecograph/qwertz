@@ -192,6 +192,17 @@ export const de: Record<TranslationKey, string> = {
   feedback_undo_applied: 'Rückgängig ausgeführt',
   feedback_redo_applied: 'Wiederherstellen ausgeführt',
 
+  // Auth
+  auth_title: 'Anmelden',
+  auth_desc: 'Nutze E-Mail-Link-Anmeldung, um cloudbasierte Import-History freizuschalten.',
+  auth_email_placeholder: 'name@beispiel.de',
+  auth_sign_in: '[ Anmeldelink senden ]',
+  auth_signing_in: '[ Anmeldung läuft... ]',
+  auth_signed_in: 'Erfolgreich angemeldet.',
+  auth_failed: 'Authentifizierung fehlgeschlagen.',
+  auth_mock_notice: 'MVP-Hinweis: Aktuell lokaler Mock-Auth-Modus bis Firebase SDK verbunden ist.',
+  auth_sign_out: 'Abmelden',
+
   // Common
   cancel: 'Abbrechen',
 };

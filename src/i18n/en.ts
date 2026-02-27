@@ -190,6 +190,17 @@ export const en = {
   feedback_undo_applied: 'Undo applied',
   feedback_redo_applied: 'Redo applied',
 
+  // Auth
+  auth_title: 'Sign in',
+  auth_desc: 'Use email-link sign in to unlock cloud-backed import history.',
+  auth_email_placeholder: 'name@example.com',
+  auth_sign_in: '[ Send sign-in link ]',
+  auth_signing_in: '[ Signing in... ]',
+  auth_signed_in: 'Signed in successfully.',
+  auth_failed: 'Authentication failed.',
+  auth_mock_notice: 'MVP note: running in local mock auth mode until Firebase SDK is connected.',
+  auth_sign_out: 'Sign out',
+
   // Common
   cancel: 'Cancel',
 } as const;

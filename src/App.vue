@@ -4,8 +4,10 @@
       <FilterBar v-if="mappingDone" />
     </template>
 
+    <AuthGate v-if="!auth.isAuthenticated" />
+
     <UploadSplash
-      v-if="!importStore.rows.length && !tx.rows.length"
+      v-else-if="!importStore.rows.length && !tx.rows.length"
       @upload="onUpload"
       @import-json="onImportJson"
       @continue="noop"
@@ -59,11 +61,13 @@ import DashboardSankey from './components/DashboardSankey.vue';
 import ChartsView from './components/ChartsView.vue';
 import DataGrid from './components/DataGrid.vue';
 import SettingsView from './components/SettingsView.vue';
+import AuthGate from './components/AuthGate.vue';
 import ToastHost from './components/ToastHost.vue';
 import { useImportStore } from './stores/useImportStore';
 import { useMappingStore } from './stores/useMappingStore';
 import { useTransactionsStore } from './stores/useTransactionsStore';
 import { useUiStore } from './stores/useUiStore';
+import { useAuthStore } from './stores/useAuthStore';
 import { normalizeRows } from './utils/validator';
 import { useImportHistory } from './composables/useImportHistory';
 import { useLocale } from './composables/useLocale';
@@ -72,11 +76,13 @@ import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 import { useOpsLogStore } from './stores/useOpsLogStore';
 import { recordImport, validateImport } from './utils/importGuard';
+import { createImportMeta } from './services/backendClient';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
 const tx = useTransactionsStore();
 const ui = useUiStore();
+const auth = useAuthStore();
 const importHistory = useImportHistory();
 const toast = useToastStore();
 const notifications = useNotificationStore();
@@ -86,6 +92,7 @@ const mappingDone = ref(tx.rows.length > 0);
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
 const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
+  if (!auth.isAuthenticated) return 'splash';
   if (!importStore.rows.length && !tx.rows.length) return 'splash';
   if (!mappingDone.value) return 'wizard';
   return 'app';
@@ -117,11 +124,19 @@ async function onUpload(file: File) {
   }
 
   try {
+    if (!auth.user) throw new Error('Not authenticated');
     ui.processing = true;
     await importStore.importFile(file);
     mappingStore.autoSuggest(importStore.headers);
     mappingDone.value = false;
     recordImport(file.size);
+    await createImportMeta(auth.user, {
+      fileName: file.name,
+      fileSize: file.size,
+      rowCount: importStore.rows.length,
+      source: 'csv-xlsx',
+      status: 'uploaded',
+    });
     toast.push('success', `${t('feedback_import_complete')}: ${file.name}`);
     notifications.add(t('feedback_import_complete'), `${file.name} ${t('feedback_import_complete_desc')}`, 'success');
     opsLog.add('info', 'import.complete', file.name);
@@ -155,7 +170,8 @@ function onImportJson() {
       opsLog.add('warning', 'import.blocked', reason);
       return;
     }
-    file.text().then((raw) => {
+    file.text().then(async (raw) => {
+      if (!auth.user) throw new Error('Not authenticated');
       const parsed = JSON.parse(raw);
       const rows = parsed.rows ?? [];
       if (tx.rows.length > 0) {
@@ -166,6 +182,13 @@ function onImportJson() {
       importHistory.add(file.name, rows.length);
       mappingDone.value = true;
       recordImport(file.size);
+      await createImportMeta(auth.user, {
+        fileName: file.name,
+        fileSize: file.size,
+        rowCount: rows.length,
+        source: 'json',
+        status: 'processed',
+      });
       toast.push('success', `${t('feedback_json_import_complete')}: ${file.name}`);
       notifications.add(t('feedback_json_import_complete'), `${file.name} ${t('feedback_json_import_complete_desc')}`, 'success');
       opsLog.add('info', 'import.json.complete', file.name);

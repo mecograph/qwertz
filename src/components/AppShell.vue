@@ -67,11 +67,13 @@
                   <template v-else>{{ currentTabLabel }}</template>
                 </h1>
                 <p class="hidden text-xs text-terminal-muted lg:block">{{ t('app_session') }}</p>
+                <p v-if="auth.user" class="hidden text-[11px] text-terminal-muted lg:block">{{ auth.user.email }}</p>
               </div>
               <div v-if="mode === 'app'" class="min-w-0 flex flex-1 items-center justify-end gap-2">
                 <div class="min-w-0 flex-1">
                   <slot name="top-right" />
                 </div>
+                <button class="term-btn px-2 py-1 text-xs" @click="auth.signOut()">{{ t('auth_sign_out') }}</button>
                 <NotificationCenter />
               </div>
             </div>
@@ -110,6 +112,7 @@
 import { computed, watchEffect } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 import { useLocale } from '../composables/useLocale';
+import { useAuthStore } from '../stores/useAuthStore';
 import NotificationCenter from './NotificationCenter.vue';
 
 defineProps<{
@@ -117,6 +120,7 @@ defineProps<{
 }>();
 
 const ui = useUiStore();
+const auth = useAuthStore();
 const { t, lang } = useLocale();
 
 const primaryTabItems = computed(() => [
