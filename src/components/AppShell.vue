@@ -23,7 +23,7 @@
               :key="item.key"
               class="w-full px-3 py-2 text-left text-sm"
               :class="ui.tab === item.key ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
-              @click="ui.tab = item.key"
+              @click="ui.setTab(item.key)"
             >
               <span v-if="ui.tab === item.key && ui.theme === 'dark'">&gt; </span>{{ item.label }}
             </button>
@@ -33,7 +33,7 @@
             <button
               class="w-full px-3 py-2 text-left text-sm"
               :class="ui.tab === 'Settings' ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
-              @click="ui.tab = 'Settings'"
+              @click="ui.setTab('Settings')"
             >
               <span v-if="ui.tab === 'Settings' && ui.theme === 'dark'">&gt; </span>{{ t('nav_settings') }}
             </button>
@@ -87,7 +87,7 @@
           :key="item.key"
           class="flex flex-1 flex-col items-center gap-0.5 py-2"
           :class="ui.tab === item.key ? 'text-terminal-green' : 'text-terminal-muted'"
-          @click="ui.tab = item.key"
+          @click="ui.setTab(item.key)"
         >
           <!-- Dashboard icon: 4-square grid -->
           <svg v-if="item.key === 'Dashboard'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>

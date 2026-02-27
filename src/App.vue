@@ -42,10 +42,12 @@
       </template>
     </template>
   </AppShell>
+
+  <ToastHost />
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import AppShell from './components/AppShell.vue';
 import UploadSplash from './components/UploadSplash.vue';
 import SourceSelect from './components/SourceSelect.vue';
@@ -57,6 +59,7 @@ import DashboardSankey from './components/DashboardSankey.vue';
 import ChartsView from './components/ChartsView.vue';
 import DataGrid from './components/DataGrid.vue';
 import SettingsView from './components/SettingsView.vue';
+import ToastHost from './components/ToastHost.vue';
 import { useImportStore } from './stores/useImportStore';
 import { useMappingStore } from './stores/useMappingStore';
 import { useTransactionsStore } from './stores/useTransactionsStore';
@@ -64,12 +67,15 @@ import { useUiStore } from './stores/useUiStore';
 import { normalizeRows } from './utils/validator';
 import { useImportHistory } from './composables/useImportHistory';
 import { useLocale } from './composables/useLocale';
+import { useToastStore } from './stores/useToastStore';
+import { toAppError } from './utils/appError';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
 const tx = useTransactionsStore();
 const ui = useUiStore();
 const importHistory = useImportHistory();
+const toast = useToastStore();
 const { t } = useLocale();
 const mappingDone = ref(tx.rows.length > 0);
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
@@ -80,12 +86,30 @@ const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
   return 'app';
 });
 
+const handleHashChange = () => ui.syncTabFromLocation();
+
+onMounted(() => {
+  ui.syncTabFromLocation();
+  window.addEventListener('hashchange', handleHashChange);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('hashchange', handleHashChange);
+});
+
 async function onUpload(file: File) {
-  ui.processing = true;
-  await importStore.importFile(file);
-  mappingStore.autoSuggest(importStore.headers);
-  ui.processing = false;
-  mappingDone.value = false;
+  try {
+    ui.processing = true;
+    await importStore.importFile(file);
+    mappingStore.autoSuggest(importStore.headers);
+    mappingDone.value = false;
+    toast.push('success', `Imported ${file.name}`);
+  } catch (error) {
+    const appError = toAppError(error, 'Import failed. Please try again.');
+    toast.push('error', appError.message, 4200);
+  } finally {
+    ui.processing = false;
+  }
 }
 
 function onImportJson() {
@@ -105,23 +129,37 @@ function onImportJson() {
       }
       importHistory.add(file.name, rows.length);
       mappingDone.value = true;
+      toast.push('success', `Imported JSON ${file.name}`);
+    }).catch((error) => {
+      const appError = toAppError(error, 'JSON import failed.');
+      toast.push('error', appError.message, 4200);
     });
   };
   input.click();
 }
 
 function applyMapping() {
-  ui.processing = true;
-  const result = normalizeRows(importStore.rows, mappingStore.mapping);
-  mappingStore.setIssues(result.issues);
-  if (tx.rows.length > 0) {
-    tx.addRows(result.valid);
-  } else {
-    tx.setRows(result.valid);
+  try {
+    ui.processing = true;
+    const result = normalizeRows(importStore.rows, mappingStore.mapping);
+    mappingStore.setIssues(result.issues);
+    if (tx.rows.length > 0) {
+      tx.addRows(result.valid);
+    } else {
+      tx.setRows(result.valid);
+    }
+    importHistory.add(importStore.fileName || 'unknown', result.valid.length);
+    mappingDone.value = true;
+    toast.push('success', `Mapped ${result.valid.length} rows`);
+    if (result.issues.length > 0) {
+      toast.push('warning', `${result.issues.length} validation issues found`, 4200);
+    }
+  } catch (error) {
+    const appError = toAppError(error, 'Failed to apply mapping.');
+    toast.push('error', appError.message, 4200);
+  } finally {
+    ui.processing = false;
   }
-  importHistory.add(importStore.fileName || 'unknown', result.valid.length);
-  mappingDone.value = true;
-  ui.processing = false;
 }
 
 function noop() {}

@@ -123,6 +123,7 @@ import { useLocaleStore } from '../stores/useLocaleStore';
 import { clearRows } from '../utils/storage';
 import { useImportHistory } from '../composables/useImportHistory';
 import { useLocale } from '../composables/useLocale';
+import { useToastStore } from '../stores/useToastStore';
 import TermConfirmModal from './TermConfirmModal.vue';
 
 const emit = defineEmits<{ 'upload-more': [file: File]; 'import-json-more': [] }>();
@@ -133,6 +134,7 @@ const localeStore = useLocaleStore();
 const importHistory = useImportHistory();
 const { t, lang } = useLocale();
 const showPurgeConfirm = ref(false);
+const toast = useToastStore();
 
 function formatHistoryDate(ts: number) {
   const loc = lang.value === 'de' ? 'de-DE' : 'en-GB';
@@ -160,5 +162,6 @@ function purge() {
   tx.setRows([]);
   importHistory.clear();
   showPurgeConfirm.value = false;
+  toast.push('info', 'Local data purged');
 }
 </script>

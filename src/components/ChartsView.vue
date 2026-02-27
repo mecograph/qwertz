@@ -375,6 +375,6 @@ function onMonthlyLabelClick(params: { name?: string }) {
 }
 
 function openInData() {
-  ui.tab = 'Data';
+  ui.setTab('Data');
 }
 </script>
