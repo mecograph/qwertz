@@ -53,7 +53,7 @@ export const en = {
   filter_filters: 'Filters',
   filter_reset_all: 'Reset All Filters',
   filter_all_time: 'All time',
-  filter_add: '+ Filter',
+  filter_add: 'Filter',
 
   // Date presets
   preset_last_7: 'Last 7 days',
@@ -233,6 +233,8 @@ export const en = {
   auth_signing_in: '[ Signing in... ]',
   auth_signed_in: 'Signed in successfully.',
   auth_link_sent: 'Sign-in link sent. Check your email inbox.',
+  auth_link_sent_title: 'Check your inbox',
+  auth_link_sent_back: '[ Try another email ]',
   auth_failed: 'Authentication failed.',
   auth_complete_failed: 'Could not complete email-link sign-in.',
   auth_mock_notice: 'MVP note: running in local mock auth mode until Firebase SDK is connected.',
@@ -257,6 +259,31 @@ export const en = {
   passphrase_setup_failed: 'Passphrase setup failed.',
   passphrase_unlock_failed: 'Unlock failed.',
   passphrase_forgot_link: 'Forgot passphrase? Purge all data',
+
+  // Profile
+  nav_profile: 'Profile',
+  profile_title: 'Profile',
+  profile_display_name: 'Display Name',
+  profile_display_name_placeholder: 'Your name',
+  profile_email: 'Email',
+  profile_avatar: 'Profile Picture',
+  profile_upload_avatar: 'Upload picture',
+  profile_remove_avatar: 'Remove',
+  profile_save: 'Save changes',
+  profile_saved: 'Profile saved.',
+  profile_account: 'Account',
+  profile_sign_in_method: 'Sign-in method',
+  profile_provider_email: 'Email link',
+  profile_provider_google: 'Google',
+  profile_provider_mock: 'Local (mock)',
+  profile_user_id: 'User ID',
+  profile_preferences: 'Preferences',
+  profile_theme: 'Theme',
+  profile_language: 'Language',
+
+  // Sidebar
+  sidebar_collapse: 'Collapse sidebar',
+  sidebar_expand: 'Expand sidebar',
 
   // Common
   cancel: 'Cancel',

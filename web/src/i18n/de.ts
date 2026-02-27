@@ -55,7 +55,7 @@ export const de: Record<TranslationKey, string> = {
   filter_filters: 'Filter',
   filter_reset_all: 'Alle Filter zurücksetzen',
   filter_all_time: 'Gesamter Zeitraum',
-  filter_add: '+ Filter',
+  filter_add: 'Filter',
 
   // Date presets
   preset_last_7: 'Letzte 7 Tage',
@@ -235,6 +235,8 @@ export const de: Record<TranslationKey, string> = {
   auth_signing_in: '[ Anmeldung läuft... ]',
   auth_signed_in: 'Erfolgreich angemeldet.',
   auth_link_sent: 'Anmeldelink gesendet. Bitte prüfe dein E-Mail-Postfach.',
+  auth_link_sent_title: 'Postfach prüfen',
+  auth_link_sent_back: '[ Andere E-Mail versuchen ]',
   auth_failed: 'Authentifizierung fehlgeschlagen.',
   auth_complete_failed: 'E-Mail-Link-Anmeldung konnte nicht abgeschlossen werden.',
   auth_mock_notice: 'MVP-Hinweis: Aktuell lokaler Mock-Auth-Modus bis Firebase SDK verbunden ist.',
@@ -259,6 +261,31 @@ export const de: Record<TranslationKey, string> = {
   passphrase_setup_failed: 'Passphrase-Einrichtung fehlgeschlagen.',
   passphrase_unlock_failed: 'Entsperrung fehlgeschlagen.',
   passphrase_forgot_link: 'Passphrase vergessen? Alle Daten löschen',
+
+  // Profile
+  nav_profile: 'Profil',
+  profile_title: 'Profil',
+  profile_display_name: 'Anzeigename',
+  profile_display_name_placeholder: 'Dein Name',
+  profile_email: 'E-Mail',
+  profile_avatar: 'Profilbild',
+  profile_upload_avatar: 'Bild hochladen',
+  profile_remove_avatar: 'Entfernen',
+  profile_save: 'Speichern',
+  profile_saved: 'Profil gespeichert.',
+  profile_account: 'Konto',
+  profile_sign_in_method: 'Anmeldemethode',
+  profile_provider_email: 'E-Mail-Link',
+  profile_provider_google: 'Google',
+  profile_provider_mock: 'Lokal (Mock)',
+  profile_user_id: 'Benutzer-ID',
+  profile_preferences: 'Einstellungen',
+  profile_theme: 'Design',
+  profile_language: 'Sprache',
+
+  // Sidebar
+  sidebar_collapse: 'Seitenleiste einklappen',
+  sidebar_expand: 'Seitenleiste ausklappen',
 
   // Common
   cancel: 'Abbrechen',
