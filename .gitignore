@@ -4,4 +4,14 @@ dist/
 tsconfig.tsbuildinfo
 
 # Transpiled JS outputs alongside .ts/.vue source
-src/**/*.js
+web/src/**/*.js
+
+# Local env files
+.env.local
+web/.env.local
+
+# Monorepo workspace artifacts
+web/node_modules/
+web/dist/
+backend/node_modules/
+backend/lib/
