@@ -127,7 +127,6 @@
               <button class="text-xs text-terminal-muted hover:text-terminal-green" @click.stop="toggleMenu(item.id)">...</button>
               <div
                 v-if="openMenu === item.id"
-                ref="menuRoot"
                 class="absolute right-0 top-8 z-30 border border-terminal-border bg-terminal-surface"
               >
                 <button class="w-full px-3 py-1 text-left text-xs hover:bg-terminal-green-dim" @click="duplicate(item.id)">{{ t('data_duplicate') }}</button>
@@ -141,8 +140,8 @@
 
     <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex gap-2">
-        <button class="term-btn" @click="tx.undo">{{ t('data_undo') }}</button>
-        <button class="term-btn" @click="tx.redo">{{ t('data_redo') }}</button>
+        <button class="term-btn" @click="undo">{{ t('data_undo') }}</button>
+        <button class="term-btn" @click="redo">{{ t('data_redo') }}</button>
       </div>
 
       <div class="flex items-center gap-2 text-sm">
@@ -160,12 +159,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useLocale } from '../composables/useLocale';
+import { useToastStore } from '../stores/useToastStore';
+import { useNotificationStore } from '../stores/useNotificationStore';
 import type { Tx } from '../types';
 
 const tx = useTransactionsStore();
+const toast = useToastStore();
+const notifications = useNotificationStore();
 const { t, formatCurrency } = useLocale();
 const search = ref('');
 const page = ref(1);
@@ -238,7 +241,6 @@ function startEdit(rowId: string, field: string) {
   nextTick(() => {
     const el = document.querySelector<HTMLInputElement | HTMLSelectElement>('td input:focus, td select');
     if (!el) {
-      // Focus the newly rendered input
       const inputs = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('.term-input, .term-select');
       const last = inputs[inputs.length - 1];
       last?.focus();
@@ -262,18 +264,36 @@ function toggleMenu(id: string) {
 function duplicate(id: string) {
   tx.duplicateRow(id);
   openMenu.value = null;
+  toast.push('success', 'Row duplicated');
+  notifications.add('Row duplicated', 'A transaction row was duplicated in the grid.', 'info');
 }
 
 function remove(id: string) {
   tx.deleteRow(id);
   openMenu.value = null;
+  toast.push('warning', 'Row deleted');
+  notifications.add('Row deleted', 'A transaction row was removed from the grid.', 'warning');
 }
 
-// Close menu on outside click
+function undo() {
+  tx.undo();
+  toast.push('info', 'Undo applied');
+}
+
+function redo() {
+  tx.redo();
+  toast.push('info', 'Redo applied');
+}
+
 function onDocClick() {
   openMenu.value = null;
 }
-if (typeof document !== 'undefined') {
+
+onMounted(() => {
   document.addEventListener('click', onDocClick);
-}
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', onDocClick);
+});
 </script>
