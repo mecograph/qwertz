@@ -20,6 +20,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: restoreSession() as AuthUser | null,
     loading: false,
+    initializing: true,
   }),
   getters: {
     isAuthenticated: (state) => Boolean(state.user),
@@ -61,9 +62,13 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     initAuthListener() {
-      if (!onAuthChanged) return;
+      if (!onAuthChanged) {
+        this.initializing = false;
+        return;
+      }
       onAuthChanged((user) => {
         this.user = user;
+        this.initializing = false;
       });
     },
     signOut() {

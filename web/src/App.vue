@@ -4,7 +4,13 @@
       <FilterBar v-if="mappingDone" />
     </template>
 
-    <AuthGate v-if="!auth.isAuthenticated" />
+    <div v-if="auth.initializing" class="flex flex-col items-center justify-center gap-4 py-20">
+      <div class="h-1 w-48 overflow-hidden bg-terminal-green-dim" :style="{ borderRadius: ui.theme === 'light' ? '9999px' : '0' }">
+        <div class="h-full w-1/2 animate-pulse bg-terminal-green" :style="{ borderRadius: ui.theme === 'light' ? '9999px' : '0' }"></div>
+      </div>
+    </div>
+
+    <AuthGate v-else-if="!auth.isAuthenticated" />
 
     <PassphraseGate
       v-else-if="!cryptoGate.unlocked.value"
@@ -43,9 +49,10 @@
       <template v-else>
         <div class="h-full min-h-0">
           <DashboardSankey v-show="ui.tab === 'Dashboard'" class="h-full" />
-          <ChartsView v-show="ui.tab === 'Charts'" class="h-full overflow-auto" />
+          <ChartsView v-show="ui.tab === 'Charts'" class="h-full overflow-auto pb-20 lg:pb-0" />
           <DataGrid v-show="ui.tab === 'Data'" class="h-full" />
-          <SettingsView v-show="ui.tab === 'Settings'" class="h-full overflow-auto" @upload-more="onUpload" @import-json-more="onImportJson" />
+          <SettingsView v-show="ui.tab === 'Settings'" class="h-full overflow-auto pb-20 lg:pb-0" @upload-more="onUpload" @import-json-more="onImportJson" />
+          <ProfileView v-show="ui.tab === 'Profile'" class="h-full overflow-auto pb-20 lg:pb-0" />
         </div>
       </template>
     </template>
@@ -67,6 +74,7 @@ import DashboardSankey from './components/DashboardSankey.vue';
 import ChartsView from './components/ChartsView.vue';
 import DataGrid from './components/DataGrid.vue';
 import SettingsView from './components/SettingsView.vue';
+import ProfileView from './components/ProfileView.vue';
 import AuthGate from './components/AuthGate.vue';
 import PassphraseGate from './components/PassphraseGate.vue';
 import ToastHost from './components/ToastHost.vue';
@@ -102,6 +110,7 @@ const currentImportId = ref<string | undefined>();
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
 const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
+  if (auth.initializing) return 'splash';
   if (!auth.isAuthenticated) return 'splash';
   if (!importStore.rows.length && !tx.rows.length) return 'splash';
   if (!mappingDone.value) return 'wizard';
