@@ -4,7 +4,7 @@
       {{ filters.dateLabel }} ▾
     </button>
 
-    <div v-if="open" class="absolute right-0 top-11 z-40 flex w-[32rem] max-w-[calc(100vw-2rem)] border border-terminal-border bg-terminal-surface">
+    <div v-if="open" class="term-popout absolute right-0 top-full z-40 mt-2 flex w-[32rem] max-w-[calc(100vw-2rem)]">
       <!-- Presets (left) -->
       <div class="w-2/5 border-r border-terminal-border p-3 overflow-auto max-h-80">
         <p class="text-xs font-bold text-terminal-amber">{{ t('filter_presets') }}</p>

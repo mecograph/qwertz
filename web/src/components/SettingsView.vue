@@ -13,50 +13,6 @@
       </div>
     </div>
 
-    <!-- Appearance -->
-    <div class="term-pane">
-      <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_appearance') }}</h2>
-      <p class="mt-2 text-xs text-terminal-muted">{{ t('settings_appearance_desc') }}</p>
-      <div class="mt-3 flex w-48 border border-terminal-border">
-        <button
-          class="flex-1 px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="ui.theme === 'dark' ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
-          @click="ui.setTheme('dark')"
-        >
-          {{ t('settings_dark') }}
-        </button>
-        <button
-          class="flex-1 border-l border-terminal-border px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="ui.theme === 'light' ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
-          @click="ui.setTheme('light')"
-        >
-          {{ t('settings_light') }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Language -->
-    <div class="term-pane">
-      <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_language') }}</h2>
-      <p class="mt-2 text-xs text-terminal-muted">{{ t('settings_language_desc') }}</p>
-      <div class="mt-3 flex w-48 border border-terminal-border">
-        <button
-          class="flex-1 px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="lang === 'en' ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
-          @click="localeStore.setLang('en')"
-        >
-          English
-        </button>
-        <button
-          class="flex-1 border-l border-terminal-border px-3 py-1.5 text-xs font-medium transition-colors"
-          :class="lang === 'de' ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
-          @click="localeStore.setLang('de')"
-        >
-          Deutsch
-        </button>
-      </div>
-    </div>
-
     <!-- Data Management -->
     <div class="term-pane">
       <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_data_management') }}</h2>
@@ -215,9 +171,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useUiStore } from '../stores/useUiStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
-import { useLocaleStore } from '../stores/useLocaleStore';
 import { clearRows } from '../utils/storage';
 import { useImportHistory } from '../composables/useImportHistory';
 import { useLocale } from '../composables/useLocale';
@@ -232,10 +186,8 @@ import ImportDiffView from './ImportDiffView.vue';
 
 const emit = defineEmits<{ 'upload-more': [file: File]; 'import-json-more': [] }>();
 
-const ui = useUiStore();
 const auth = useAuthStore();
 const tx = useTransactionsStore();
-const localeStore = useLocaleStore();
 const importHistory = useImportHistory();
 const { t, lang, formatCurrency } = useLocale();
 const showPurgeConfirm = ref(false);

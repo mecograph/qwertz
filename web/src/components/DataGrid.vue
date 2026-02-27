@@ -13,17 +13,16 @@
     <p class="mt-2 text-xs text-terminal-muted">{{ t('data_showing') }} {{ pagedRows.length }} {{ t('data_of') }} {{ sortedRows.length }} {{ t('data_filtered_rows') }} ({{ tx.rows.length }} {{ t('data_total') }})</p>
 
     <div class="mt-3 min-h-0 flex-1 overflow-auto">
-      <table class="w-full text-sm">
+      <table class="w-full text-xs">
         <thead class="sticky top-0 z-10 bg-terminal-bg">
           <tr>
             <th
               v-for="col in columns"
               :key="col.key"
-              class="cursor-pointer select-none border-b border-terminal-border px-2 py-2 text-left text-xs text-terminal-amber hover:text-terminal-green"
+              class="cursor-pointer select-none whitespace-nowrap border-b border-terminal-border px-2 py-2 text-left text-xs text-terminal-amber hover:text-terminal-green"
               @click="toggleSort(col.key)"
             >
-              {{ col.label }}
-              <span v-if="sortField === col.key" class="ml-1">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+              {{ col.label }}<span v-if="sortField === col.key" class="ml-1">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
             </th>
             <th class="w-10 border-b border-terminal-border px-2 py-2 text-xs text-terminal-amber"></th>
           </tr>
@@ -35,11 +34,11 @@
             class="border-b border-terminal-border hover:bg-terminal-green-dim/30"
           >
             <!-- Date -->
-            <td class="px-2 py-2" @click="startEdit(item.id, 'date')">
+            <td class="whitespace-nowrap px-2 py-1.5" @click="startEdit(item.id, 'date')">
               <input
                 v-if="isEditing(item.id, 'date')"
                 type="date"
-                class="term-input w-full px-1 py-0"
+                class="term-input w-full px-1 py-0 text-xs"
                 :value="item.date.slice(0, 10)"
                 @blur="commitEdit(item.id, 'date', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
@@ -50,10 +49,10 @@
             </td>
 
             <!-- Type -->
-            <td class="px-2 py-2" @click="startEdit(item.id, 'type')">
+            <td class="whitespace-nowrap px-2 py-1.5" @click="startEdit(item.id, 'type')">
               <select
                 v-if="isEditing(item.id, 'type')"
-                class="term-select w-full px-1 py-0"
+                class="term-select w-full px-1 py-0 text-xs"
                 :value="item.type"
                 @change="commitEdit(item.id, 'type', ($event.target as HTMLSelectElement).value)"
                 @blur="cancelEdit"
@@ -66,10 +65,10 @@
             </td>
 
             <!-- Category -->
-            <td class="px-2 py-2" @click="startEdit(item.id, 'category')">
+            <td class="max-w-[120px] truncate whitespace-nowrap px-2 py-1.5" :title="item.category" @click="startEdit(item.id, 'category')">
               <input
                 v-if="isEditing(item.id, 'category')"
-                class="term-input w-full px-1 py-0"
+                class="term-input w-full px-1 py-0 text-xs"
                 :value="item.category"
                 @blur="commitEdit(item.id, 'category', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
@@ -80,10 +79,10 @@
             </td>
 
             <!-- Label -->
-            <td class="px-2 py-2" @click="startEdit(item.id, 'label')">
+            <td class="max-w-[160px] truncate whitespace-nowrap px-2 py-1.5" :title="item.label" @click="startEdit(item.id, 'label')">
               <input
                 v-if="isEditing(item.id, 'label')"
-                class="term-input w-full px-1 py-0"
+                class="term-input w-full px-1 py-0 text-xs"
                 :value="item.label"
                 @blur="commitEdit(item.id, 'label', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
@@ -94,25 +93,25 @@
             </td>
 
             <!-- Purpose -->
-            <td class="px-2 py-2" @click="startEdit(item.id, 'purpose')">
+            <td class="max-w-[200px] truncate whitespace-nowrap px-2 py-1.5" :title="item.purpose ?? ''" @click="startEdit(item.id, 'purpose')">
               <input
                 v-if="isEditing(item.id, 'purpose')"
-                class="term-input w-full px-1 py-0"
+                class="term-input w-full px-1 py-0 text-xs"
                 :value="item.purpose ?? ''"
                 @blur="commitEdit(item.id, 'purpose', ($event.target as HTMLInputElement).value)"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
                 @keydown.escape="cancelEdit"
                 ref="editInputs"
               />
-              <span v-else class="truncate">{{ item.purpose }}</span>
+              <span v-else>{{ item.purpose }}</span>
             </td>
 
             <!-- Amount -->
-            <td class="px-2 py-2 text-right" @click="startEdit(item.id, 'amount')">
+            <td class="whitespace-nowrap px-2 py-1.5 text-right" @click="startEdit(item.id, 'amount')">
               <input
                 v-if="isEditing(item.id, 'amount')"
                 type="number"
-                class="term-input w-full px-1 py-0 text-right"
+                class="term-input w-full px-1 py-0 text-right text-xs"
                 :value="item.amount"
                 @blur="commitEdit(item.id, 'amount', Number(($event.target as HTMLInputElement).value))"
                 @keydown.enter="($event.target as HTMLInputElement).blur()"
@@ -123,14 +122,14 @@
             </td>
 
             <!-- Row overflow menu -->
-            <td class="relative px-2 py-2 text-center">
+            <td class="relative whitespace-nowrap px-2 py-1.5 text-center">
               <button class="text-xs text-terminal-muted hover:text-terminal-green" @click.stop="toggleMenu(item.id)">...</button>
               <div
                 v-if="openMenu === item.id"
-                class="absolute right-0 top-8 z-30 border border-terminal-border bg-terminal-surface"
+                class="term-popout absolute right-0 top-8 z-30"
               >
-                <button class="w-full px-3 py-1 text-left text-xs hover:bg-terminal-green-dim" @click="duplicate(item.id)">{{ t('data_duplicate') }}</button>
-                <button class="w-full px-3 py-1 text-left text-xs text-terminal-red hover:bg-terminal-green-dim" @click="remove(item.id)">{{ t('data_delete') }}</button>
+                <button class="w-full px-4 py-2 text-left text-xs hover:bg-terminal-green-dim" @click="duplicate(item.id)">{{ t('data_duplicate') }}</button>
+                <button class="w-full px-4 py-2 text-left text-xs text-terminal-red hover:bg-terminal-green-dim" @click="remove(item.id)">{{ t('data_delete') }}</button>
               </div>
             </td>
           </tr>
@@ -140,15 +139,29 @@
 
     <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex gap-2">
-        <button class="term-btn" @click="undo">{{ t('data_undo') }}</button>
-        <button class="term-btn" @click="redo">{{ t('data_redo') }}</button>
+        <button class="term-btn px-3 py-1.5 text-xs disabled:opacity-40 disabled:cursor-not-allowed" :disabled="!canUndo" @click="undo" :title="t('data_undo')">{{ t('data_undo') }}</button>
+        <button class="term-btn px-3 py-1.5 text-xs disabled:opacity-40 disabled:cursor-not-allowed" :disabled="!canRedo" @click="redo" :title="t('data_redo')">{{ t('data_redo') }}</button>
       </div>
 
-      <div class="flex items-center gap-2 text-sm">
-        <button class="term-btn px-3 py-1.5 disabled:opacity-50" :disabled="page === 1" @click="page--">{{ t('data_prev') }}</button>
-        <span class="text-terminal-muted">{{ t('data_page') }} {{ page }} / {{ totalPages }}</span>
-        <button class="term-btn px-3 py-1.5 disabled:opacity-50" :disabled="page === totalPages" @click="page++">{{ t('data_next') }}</button>
-        <select class="term-select px-2 py-1.5" v-model.number="pageSize">
+      <div class="flex items-center gap-2 text-xs">
+        <button
+          class="term-btn px-2 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="page === 1"
+          :title="t('data_prev')"
+          @click="page--"
+        >
+          <AppIcon name="chevron-left" :size="14" />
+        </button>
+        <span class="text-terminal-muted">{{ page }} / {{ totalPages }}</span>
+        <button
+          class="term-btn px-2 py-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="page === totalPages"
+          :title="t('data_next')"
+          @click="page++"
+        >
+          <AppIcon name="chevron-right" :size="14" />
+        </button>
+        <select class="term-select px-2 py-1.5 text-xs" v-model.number="pageSize">
           <option :value="25">25</option>
           <option :value="50">50</option>
           <option :value="100">100</option>
@@ -166,6 +179,7 @@ import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
 import type { Tx } from '../types';
 import { useOpsLogStore } from '../stores/useOpsLogStore';
+import AppIcon from './AppIcon.vue';
 
 const tx = useTransactionsStore();
 const toast = useToastStore();
@@ -179,6 +193,9 @@ const sortField = ref<keyof Tx>('date');
 const sortDir = ref<'asc' | 'desc'>('desc');
 const editingCell = ref<{ rowId: string; field: string } | null>(null);
 const openMenu = ref<string | null>(null);
+
+const canUndo = computed(() => tx.history.length > 0);
+const canRedo = computed(() => tx.future.length > 0);
 
 const columns = computed<{ key: keyof Tx; label: string }[]>(() => [
   { key: 'date', label: t('col_date') },
