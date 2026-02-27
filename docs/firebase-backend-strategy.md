@@ -424,3 +424,14 @@ Da die Registry in der aktuellen Entwicklungsumgebung den direkten `firebase`-Pa
 - Session-Persistenz mit `idToken` + Ablaufzeit lokal.
 
 Das ist als Übergang valide. Sobald SDK-Install wieder möglich ist, sollte auf den offiziellen Firebase Web SDK Flow (`sendSignInLinkToEmail` / `isSignInWithEmailLink`) umgestellt werden.
+
+### Update: Storage + Firestore Mapping (Firebase-Provider)
+
+Nächster Schritt umgesetzt:
+- `backendClientFirebase.ts` mappt Import-Metadaten auf Firestore (`users/{uid}/imports/{importId}`).
+- Verschlüsselte Originaldateien werden im Firebase-Provider in Storage abgelegt (Ciphertext-Payload als JSON-Blob).
+- Download lädt den verschlüsselten Blob aus Storage und entschlüsselt wieder clientseitig.
+- Retention-/Clear-Operationen löschen sowohl Firestore-Metadaten als auch zugehörige Storage-Objekte.
+- Analytics-Overview wird unter `users/{uid}/analytics/overview` materialisiert.
+
+Hinweis: Die Umsetzung nutzt aktuell REST-Calls (gleicher Grund wie bei Auth: SDK-Installation in dieser Umgebung blockiert). Bei verfügbarer SDK-Installation sollte auf das offizielle Firebase Web SDK migriert werden.
