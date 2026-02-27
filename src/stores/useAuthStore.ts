@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia';
-import { authProviderMode, restoreSession, signInWithEmailLink, signOut as signOutClient } from '../services/authClient';
+import {
+  authProviderMode,
+  restoreSession,
+  signInWithEmailLink,
+  signOut as signOutClient,
+  tryCompleteEmailLinkSignIn,
+} from '../services/authClient';
 
 export interface AuthUser {
   uid: string;
@@ -20,7 +26,24 @@ export const useAuthStore = defineStore('auth', {
     async signInWithEmailLink(email: string) {
       this.loading = true;
       try {
-        this.user = await signInWithEmailLink(email);
+        const result = await signInWithEmailLink(email);
+        if (result.status === 'signed_in' && result.user) {
+          this.user = result.user;
+        }
+        return result;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async completeSignInFromUrl() {
+      this.loading = true;
+      try {
+        const user = await tryCompleteEmailLinkSignIn();
+        if (user) {
+          this.user = user;
+          return true;
+        }
+        return false;
       } finally {
         this.loading = false;
       }

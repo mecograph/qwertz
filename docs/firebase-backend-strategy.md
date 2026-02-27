@@ -409,9 +409,18 @@ Bereits umgesetzt in Codebasis:
 - `backendClient` ist auf Provider-Switch vorbereitet (`VITE_BACKEND_PROVIDER=mock|firebase`).
 - `auth` ist auf Provider-Switch vorbereitet (`VITE_AUTH_PROVIDER=mock|firebase`).
 - Mock-Provider bleibt Standard, damit die App weiterhin lauffähig ist.
-- Firebase-Provider sind als Scaffold angelegt und werfen aktuell bewusst einen klaren Fehler, bis SDK + echte Adapter implementiert sind.
+- Backend-Firebase-Provider ist als Scaffold angelegt (klare Fehler), Auth-Firebase-Provider läuft temporär über REST (ohne SDK).
 
 Nächste technische Schritte (direkt anschlussfähig):
 1. Firebase SDK installieren und in `authClientFirebase.ts` verdrahten (Email-Link + Session-Rehydrate).
 2. `backendClientFirebase.ts` auf Firestore/Storage umsetzen (zuerst `list/create import meta`).
 3. Danach encrypted upload/download End-to-End über Storage aktivieren.
+
+### Update: Auth-Firebase-Integration ohne SDK (temporär)
+
+Da die Registry in der aktuellen Entwicklungsumgebung den direkten `firebase`-Package-Download blockiert, wurde als nächster Schritt ein **REST-basierter Email-Link-Auth-Flow** umgesetzt:
+- Link-Versand über `accounts:sendOobCode` (Identity Toolkit API),
+- Sign-in-Completion über `accounts:signInWithEmailLink`,
+- Session-Persistenz mit `idToken` + Ablaufzeit lokal.
+
+Das ist als Übergang valide. Sobald SDK-Install wieder möglich ist, sollte auf den offiziellen Firebase Web SDK Flow (`sendSignInLinkToEmail` / `isSignInWithEmailLink`) umgestellt werden.

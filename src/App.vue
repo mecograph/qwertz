@@ -120,9 +120,24 @@ async function runRetentionSweepWithFeedback() {
   });
 }
 
-onMounted(() => {
+onMounted(async () => {
   ui.syncTabFromLocation();
   window.addEventListener('hashchange', handleHashChange);
+
+  try {
+    const completed = await auth.completeSignInFromUrl();
+    if (completed) {
+      toast.push('success', t('auth_signed_in'));
+      notifications.add(t('auth_signed_in'), auth.user?.email ?? '', 'success');
+      opsLog.add('info', 'auth.email_link.completed', auth.user?.email ?? 'unknown');
+    }
+  } catch (error) {
+    const appError = toAppError(error, t('auth_complete_failed'));
+    toast.push('error', appError.message, 4200);
+    notifications.add(t('auth_failed'), appError.message, 'error');
+    opsLog.add('error', 'auth.email_link.failed', appError.message);
+  }
+
   importHistory.refresh();
   runRetentionSweepWithFeedback();
   syncAnalytics();

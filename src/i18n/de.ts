@@ -218,9 +218,11 @@ export const de: Record<TranslationKey, string> = {
   auth_sign_in: '[ Anmeldelink senden ]',
   auth_signing_in: '[ Anmeldung läuft... ]',
   auth_signed_in: 'Erfolgreich angemeldet.',
+  auth_link_sent: 'Anmeldelink gesendet. Bitte prüfe dein E-Mail-Postfach.',
   auth_failed: 'Authentifizierung fehlgeschlagen.',
+  auth_complete_failed: 'E-Mail-Link-Anmeldung konnte nicht abgeschlossen werden.',
   auth_mock_notice: 'MVP-Hinweis: Aktuell lokaler Mock-Auth-Modus bis Firebase SDK verbunden ist.',
-  auth_firebase_scaffold_notice: 'Firebase-Modus aktiv: Als Nächstes folgt die SDK-Integration (das aktuelle Scaffold wirft bis zur Implementierung Fehler).',
+  auth_firebase_scaffold_notice: 'Firebase-Modus aktiv: Der Anmeldelink wird über die Firebase-Auth-REST-API gesendet.',
   auth_sign_out: 'Abmelden',
 
   // Common

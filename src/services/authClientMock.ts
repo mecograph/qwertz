@@ -23,7 +23,7 @@ function uidFromEmail(email: string) {
   return `uid_${btoa(email.toLowerCase()).replace(/=/g, '')}`;
 }
 
-export async function signInWithEmailLink(email: string): Promise<AuthUser> {
+export async function signInWithEmailLink(email: string): Promise<{ status: 'link_sent' | 'signed_in'; user?: AuthUser }> {
   const normalized = email.trim().toLowerCase();
   if (!normalized || !normalized.includes('@')) {
     throw new Error('Please provide a valid email address.');
@@ -36,9 +36,17 @@ export async function signInWithEmailLink(email: string): Promise<AuthUser> {
   };
 
   persist(user);
-  return user;
+  return { status: 'signed_in', user };
+}
+
+export async function tryCompleteEmailLinkSignIn(): Promise<AuthUser | null> {
+  return null;
 }
 
 export function signOut() {
   persist(null);
+}
+
+export function getAccessToken() {
+  return null;
 }

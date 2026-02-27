@@ -33,8 +33,13 @@ const email = ref('');
 
 async function signIn() {
   try {
-    await auth.signInWithEmailLink(email.value);
-    toast.push('success', t('auth_signed_in'));
+    const result = await auth.signInWithEmailLink(email.value);
+    if (result.status === 'signed_in') {
+      toast.push('success', t('auth_signed_in'));
+      return;
+    }
+    toast.push('success', t('auth_link_sent'));
+
   } catch (error) {
     const appError = toAppError(error, t('auth_failed'));
     toast.push('error', appError.message, 4200);

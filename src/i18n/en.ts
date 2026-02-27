@@ -216,9 +216,11 @@ export const en = {
   auth_sign_in: '[ Send sign-in link ]',
   auth_signing_in: '[ Signing in... ]',
   auth_signed_in: 'Signed in successfully.',
+  auth_link_sent: 'Sign-in link sent. Check your email inbox.',
   auth_failed: 'Authentication failed.',
+  auth_complete_failed: 'Could not complete email-link sign-in.',
   auth_mock_notice: 'MVP note: running in local mock auth mode until Firebase SDK is connected.',
-  auth_firebase_scaffold_notice: 'Firebase mode selected: SDK wiring is the next step (current scaffold will throw until implemented).',
+  auth_firebase_scaffold_notice: 'Firebase mode active: sign-in link is sent via Firebase Auth REST API.',
   auth_sign_out: 'Sign out',
 
   // Common
