@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.js.map
+tsconfig.tsbuildinfo
+
+# Transpiled JS outputs alongside .ts/.vue source
+src/**/*.js

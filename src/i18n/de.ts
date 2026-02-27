@@ -1,0 +1,156 @@
+import type { TranslationKey } from './en';
+
+export const de: Record<TranslationKey, string> = {
+  // Navigation
+  nav_dashboard: 'Dashboard',
+  nav_charts: 'Diagramme',
+  nav_data: 'Daten',
+  nav_settings: 'Einstellungen',
+
+  // AppShell
+  app_title: 'TX_ANALYZER',
+  app_version: 'v0.1.0 | lokal',
+  app_session: 'Sitzung: lokal',
+
+  // UploadSplash
+  splash_tagline: 'XLSX/CSV importieren. Deine Daten bleiben lokal im Browser.',
+  splash_upload: '[ Datei hochladen ]',
+  splash_import_json: '[ JSON importieren ]',
+  splash_continue: '[ Gespeicherte fortsetzen ]',
+
+  // SourceSelect
+  source_sheet: 'Tabellenblatt',
+  source_header_note: '$ header_row=1 # Standard für dieses MVP',
+
+  // MappingWizard
+  mapping_date: 'Buchungsdatum',
+  mapping_category: 'Kategorie',
+  mapping_label: 'Bezeichnung',
+  mapping_amount: 'Betrag',
+  mapping_purpose: 'Verwendungszweck',
+  mapping_not_mapped: 'Nicht zugeordnet',
+
+  // ValidationReview
+  validation_valid_rows: 'Gültige Zeilen',
+  validation_invalid_rows: 'Ungültige Zeilen',
+
+  // ProcessingView
+  processing_pipeline: '$ pipeline: parse_file | build_table | apply_mapping | normalize_rows | persist',
+
+  // App.vue
+  finish_import: '[ Import abschließen ]',
+
+  // Filter / DatePicker
+  filter_date_range: 'Zeitraum',
+  filter_presets: 'Voreinstellungen',
+  filter_years: 'Jahre',
+  filter_months: 'Monate',
+  filter_year: 'Jahr',
+  filter_month: 'Monat',
+  filter_start: 'Beginn',
+  filter_end: 'Ende',
+  filter_apply: 'Anwenden',
+  filter_cancel: 'Abbrechen',
+  filter_apply_date_range: 'Zeitraum anwenden',
+  filter_filters: 'Filter',
+  filter_reset_all: 'Alle Filter zurücksetzen',
+  filter_all_time: 'Gesamter Zeitraum',
+  filter_add: '+ Filter',
+
+  // Date presets
+  preset_last_7: 'Letzte 7 Tage',
+  preset_last_30: 'Letzte 30 Tage',
+  preset_last_90: 'Letzte 90 Tage',
+  preset_this_month: 'Dieser Monat',
+
+  // TermFilterChips
+  chip_type: 'Typ',
+  chip_category: 'Kategorie',
+  chip_label: 'Bezeichnung',
+  chip_neutral: 'Umbuchungen einbeziehen',
+  chip_enable_neutral: 'Umbuchungen einbeziehen',
+  chip_disable_neutral: 'Umbuchungen ausblenden',
+
+  // Dashboard / KPIs
+  dashboard_desc: 'Einnahmekategorien fließen ins Budget, Budget fließt in Ausgabekategorien. Klicke auf Kategorien (oder Verbindungen) für Details.',
+  kpi_income: 'Einnahmen',
+  kpi_expenses: 'Ausgaben',
+  kpi_net: 'Netto',
+  kpi_transactions: 'Transaktionen',
+  kpi_top_category: 'Top-Kategorie',
+  kpi_drilldown: 'Drilldown',
+  dashboard_budget: 'Budget',
+
+  // Charts
+  charts_desc: 'Excel-Parität · Unterkategorie = Bezeichnung · Chart-basiertes Monatsdetail',
+  charts_income_expense_by_cat: 'Einnahmen vs Ausgaben nach Kategorie',
+  charts_category_label: 'Kategorie + Bezeichnung',
+  charts_mode_expense: 'Ausgaben',
+  charts_mode_income: 'Einnahmen',
+  charts_mode_split: 'Aufgeteilt',
+  charts_axis_expense: 'Ausgaben',
+  charts_axis_income: 'Einnahmen',
+  charts_year_overview: 'Jahresübersicht: monatliche Einnahmen & Ausgaben nach Kategorie',
+  charts_monthly_detail: 'Monatsdetail (Chart-basiert)',
+  charts_open_in_data: '[ In Daten öffnen ]',
+  charts_detail_drawer: 'Detailansicht',
+  charts_amount_abs: 'Betrag (abs)',
+  charts_avg: 'Durchschnitt',
+  charts_largest: 'Größter',
+  charts_breadcrumb_category: 'Kategorie',
+  charts_breadcrumb_label: 'Bezeichnung',
+
+  // Table columns
+  col_date: 'Datum',
+  col_type: 'Typ',
+  col_category: 'Kategorie',
+  col_label: 'Bezeichnung',
+  col_purpose: 'Verwendungszweck',
+  col_amount: 'Betrag',
+
+  // DataGrid
+  data_search_placeholder: '> suchen...',
+  data_showing: 'Zeige',
+  data_of: 'von',
+  data_filtered_rows: 'gefilterte Zeilen',
+  data_total: 'gesamt',
+  data_duplicate: 'Duplizieren',
+  data_delete: 'Löschen',
+  data_undo: 'Rückgängig',
+  data_redo: 'Wiederherstellen',
+  data_prev: 'Zurück',
+  data_next: 'Weiter',
+  data_page: 'Seite',
+
+  // Settings
+  settings_import_data: 'Daten importieren',
+  settings_import_desc: 'Lade weitere Dateien hoch, um sie an bestehende Daten anzuhängen.',
+  settings_upload_xlsx: '[ XLSX/CSV hochladen ]',
+  settings_import_json: '[ JSON importieren ]',
+  settings_appearance: 'Darstellung',
+  settings_appearance_desc: 'Wechsle zwischen dunklem (Terminal) und hellem (flach) Design.',
+  settings_dark: 'Dunkel',
+  settings_light: 'Hell',
+  settings_language: 'Sprache',
+  settings_language_desc: 'Wähle deine bevorzugte Anzeigesprache.',
+  settings_data_management: 'Datenverwaltung',
+  settings_rows_stored: 'Lokal gespeicherte Zeilen',
+  settings_export_json: '[ JSON exportieren ]',
+  settings_import_history: 'Import-Verlauf',
+  settings_col_date: 'Datum',
+  settings_col_filename: 'Dateiname',
+  settings_col_rows: 'Zeilen',
+  settings_no_imports: 'Noch keine Importe aufgezeichnet.',
+  settings_danger_zone: 'Gefahrenzone',
+  settings_danger_desc: 'Alle Transaktionsdaten dauerhaft aus dem lokalen Speicher löschen.',
+  settings_purge: '[ Alle Daten löschen ]',
+  settings_about: 'Über',
+  settings_version: 'TX_ANALYZER v0.1.0',
+  settings_about_desc: 'Alle Daten werden lokal in deinem Browser gespeichert. Nichts wird an einen Server gesendet.',
+  settings_purge_title: 'Alle Daten löschen',
+  settings_purge_message: 'Alle Transaktionsdaten und der Import-Verlauf werden dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
+  settings_purge_confirm: 'Löschen',
+
+  // Common
+  cancel: 'Abbrechen',
+};
