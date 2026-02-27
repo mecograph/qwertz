@@ -1,14 +1,16 @@
 import { defineStore } from 'pinia';
 
 const THEME_KEY = 'tx-analyzer-theme';
+const SIDEBAR_KEY = 'tx-sidebar-collapsed';
 
-export type AppTab = 'Dashboard' | 'Charts' | 'Data' | 'Settings';
+export type AppTab = 'Dashboard' | 'Charts' | 'Data' | 'Settings' | 'Profile';
 
 const TAB_TO_ROUTE: Record<AppTab, string> = {
   Dashboard: '/app/dashboard',
   Charts: '/app/charts',
   Data: '/app/data',
   Settings: '/app/settings',
+  Profile: '/app/profile',
 };
 
 function routeToTab(path: string): AppTab | null {
@@ -17,6 +19,7 @@ function routeToTab(path: string): AppTab | null {
   if (normalized.startsWith('/app/data')) return 'Data';
   if (normalized.startsWith('/app/settings')) return 'Settings';
   if (normalized.startsWith('/app/dashboard')) return 'Dashboard';
+  if (normalized.startsWith('/app/profile')) return 'Profile';
   return null;
 }
 
@@ -41,11 +44,16 @@ export const useUiStore = defineStore('ui', {
     wizardStep: 0,
     processing: false,
     theme: loadTheme() as 'dark' | 'light',
+    sidebarCollapsed: localStorage.getItem(SIDEBAR_KEY) === 'true',
   }),
   getters: {
     chartTheme: (state) => (state.theme === 'light' ? 'flat' : 'terminal'),
   },
   actions: {
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+      localStorage.setItem(SIDEBAR_KEY, String(this.sidebarCollapsed));
+    },
     setTheme(theme: 'dark' | 'light') {
       this.theme = theme;
       localStorage.setItem(THEME_KEY, theme);
