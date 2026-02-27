@@ -17,7 +17,7 @@
   <div class="flex items-center justify-end gap-2 lg:hidden">
     <span class="truncate text-xs text-terminal-muted">{{ filters.dateLabel }}</span>
     <button class="term-btn relative px-3 py-1.5 text-xs" @click="drawerOpen = true" aria-label="Open filters">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <AppIcon name="filter" :size="14" />
       <span v-if="activeFilterCount > 0" class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center bg-terminal-amber text-[9px] font-bold text-black">{{ activeFilterCount }}</span>
     </button>
   </div>
@@ -102,12 +102,89 @@
 
             <div class="border-t border-terminal-border"></div>
 
-            <!-- Filter chips -->
+            <!-- Type -->
             <section>
-              <p class="text-xs font-bold text-terminal-amber">{{ t('filter_filters') }}</p>
-              <div class="mt-2">
-                <TermFilterChips />
+              <p class="text-xs font-bold text-terminal-amber">{{ t('chip_type') }}</p>
+              <div class="mt-2 flex gap-1">
+                <button
+                  v-for="tp in txTypes"
+                  :key="tp"
+                  class="flex-1 px-2 py-1.5 text-xs transition-colors"
+                  :class="filters.type === tp ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green'"
+                  @click="filters.type = filters.type === tp ? '' : tp"
+                >
+                  {{ tp === 'Expense' ? t('charts_mode_expense') : tp === 'Income' ? t('charts_mode_income') : t('chip_neutral') }}
+                </button>
               </div>
+            </section>
+
+            <!-- Category -->
+            <section>
+              <p class="text-xs font-bold text-terminal-amber">{{ t('chip_category') }}</p>
+              <input
+                v-model="categorySearch"
+                class="term-input mt-2 w-full px-2 py-1 text-xs"
+                :placeholder="t('data_search_placeholder')"
+              />
+              <div class="mt-1 max-h-40 space-y-0.5 overflow-auto">
+                <label
+                  v-for="cat in filteredCategories"
+                  :key="cat"
+                  class="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs hover:bg-terminal-green-dim"
+                >
+                  <input
+                    type="checkbox"
+                    class="accent-terminal-green"
+                    :checked="filters.categories.includes(cat)"
+                    @change="toggleCategory(cat)"
+                  />
+                  <span :class="filters.categories.includes(cat) ? 'text-terminal-green' : 'text-terminal-muted'">{{ cat }}</span>
+                </label>
+              </div>
+              <div v-if="filters.categories.length" class="mt-1 flex flex-wrap gap-1">
+                <span v-for="cat in filters.categories" :key="cat" class="term-chip text-[10px]">{{ cat }}</span>
+              </div>
+            </section>
+
+            <!-- Label -->
+            <section>
+              <p class="text-xs font-bold text-terminal-amber">{{ t('chip_label') }}</p>
+              <input
+                v-model="labelSearch"
+                class="term-input mt-2 w-full px-2 py-1 text-xs"
+                :placeholder="t('data_search_placeholder')"
+              />
+              <div class="mt-1 max-h-40 space-y-0.5 overflow-auto">
+                <label
+                  v-for="lbl in filteredLabels"
+                  :key="lbl"
+                  class="flex cursor-pointer items-center gap-2 px-2 py-1 text-xs hover:bg-terminal-green-dim"
+                >
+                  <input
+                    type="checkbox"
+                    class="accent-terminal-green"
+                    :checked="filters.labels.includes(lbl)"
+                    @change="toggleLabel(lbl)"
+                  />
+                  <span :class="filters.labels.includes(lbl) ? 'text-terminal-green' : 'text-terminal-muted'">{{ lbl }}</span>
+                </label>
+              </div>
+              <div v-if="filters.labels.length" class="mt-1 flex flex-wrap gap-1">
+                <span v-for="lbl in filters.labels" :key="lbl" class="term-chip text-[10px]">{{ lbl }}</span>
+              </div>
+            </section>
+
+            <!-- Include Neutral toggle -->
+            <section>
+              <label class="flex cursor-pointer items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  class="accent-terminal-green"
+                  :checked="filters.includeNeutral"
+                  @change="filters.includeNeutral = !filters.includeNeutral"
+                />
+                <span :class="filters.includeNeutral ? 'text-terminal-green' : 'text-terminal-muted'">{{ t('chip_neutral') }}</span>
+              </label>
             </section>
 
             <div class="border-t border-terminal-border"></div>
@@ -127,6 +204,7 @@
 import { watchEffect, computed, ref, watch } from 'vue';
 import TermDatePicker from './TermDatePicker.vue';
 import TermFilterChips from './TermFilterChips.vue';
+import AppIcon from './AppIcon.vue';
 import { useFilterStore } from '../stores/useFilterStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useLocale } from '../composables/useLocale';
@@ -138,6 +216,35 @@ const { t, formatMonth } = useLocale();
 const drawerOpen = ref(false);
 const drawerStart = ref('');
 const drawerEnd = ref('');
+const categorySearch = ref('');
+const labelSearch = ref('');
+
+const txTypes = ['Expense', 'Income', 'Neutral'] as const;
+
+const allCategories = computed(() => [...new Set(tx.rows.map((r) => r.category))].sort());
+const allLabels = computed(() => [...new Set(tx.rows.map((r) => r.label))].sort());
+
+const filteredCategories = computed(() => {
+  const q = categorySearch.value.toLowerCase();
+  return q ? allCategories.value.filter((c) => c.toLowerCase().includes(q)) : allCategories.value;
+});
+
+const filteredLabels = computed(() => {
+  const q = labelSearch.value.toLowerCase();
+  return q ? allLabels.value.filter((l) => l.toLowerCase().includes(q)) : allLabels.value;
+});
+
+function toggleCategory(cat: string) {
+  const idx = filters.categories.indexOf(cat);
+  if (idx >= 0) filters.categories.splice(idx, 1);
+  else filters.categories.push(cat);
+}
+
+function toggleLabel(lbl: string) {
+  const idx = filters.labels.indexOf(lbl);
+  if (idx >= 0) filters.labels.splice(idx, 1);
+  else filters.labels.push(lbl);
+}
 
 // Sync drawer date inputs when opening
 watch(drawerOpen, (isOpen) => {

@@ -2,20 +2,23 @@
   <div class="flex flex-wrap items-center gap-2">
     <!-- Add filter dropdown -->
     <div ref="dropdownRoot" class="relative">
-      <button class="term-btn px-3 py-1.5 text-xs" @click="toggleDropdown">{{ t('filter_add') }}</button>
+      <button class="term-btn flex items-center gap-1.5 px-3 py-1.5 text-xs" @click="toggleDropdown">
+        <AppIcon name="filter" :size="14" />
+        {{ t('filter_add') }}
+      </button>
 
-      <div v-if="step === 'dimension'" class="absolute right-0 top-9 z-40 w-48 border border-terminal-border bg-terminal-surface p-2">
+      <div v-if="step === 'dimension'" class="term-popout absolute right-0 top-full z-40 mt-2 w-52">
         <button
           v-for="dim in dimensions"
           :key="dim.key"
-          class="w-full px-2 py-1 text-left text-xs hover:bg-terminal-green-dim"
+          class="w-full px-3 py-2 text-left text-xs hover:bg-terminal-green-dim"
           @click="pickDimension(dim.key)"
         >
           {{ dim.label }}
         </button>
       </div>
 
-      <div v-if="step === 'value'" class="absolute right-0 top-9 z-40 w-56 border border-terminal-border bg-terminal-surface p-2">
+      <div v-if="step === 'value'" class="term-popout absolute right-0 top-full z-40 mt-2 w-60 px-3">
         <p class="text-xs font-bold text-terminal-amber">{{ activeDimensionLabel }}</p>
 
         <!-- Type: simple list -->
@@ -23,7 +26,7 @@
           <button
             v-for="opt in typeOptions"
             :key="opt"
-            class="w-full px-2 py-1 text-left text-xs hover:bg-terminal-green-dim"
+            class="w-full px-3 py-2 text-left text-xs hover:bg-terminal-green-dim"
             @click="selectType(opt)"
           >
             {{ opt }}
@@ -32,7 +35,7 @@
 
         <!-- Include Neutral: toggle -->
         <template v-else-if="activeDimension === 'neutral'">
-          <button class="w-full px-2 py-1 text-left text-xs hover:bg-terminal-green-dim" @click="toggleNeutral">
+          <button class="w-full px-3 py-2 text-left text-xs hover:bg-terminal-green-dim" @click="toggleNeutral">
             {{ filters.includeNeutral ? t('chip_disable_neutral') : t('chip_enable_neutral') }}
           </button>
         </template>
@@ -41,14 +44,14 @@
         <template v-else>
           <input
             v-model="valueSearch"
-            class="term-input mt-1 w-full px-2 py-1 text-xs"
+            class="term-input mt-2 w-full px-2 py-1.5 text-xs"
             placeholder="> search..."
           />
-          <div class="mt-1 max-h-48 overflow-auto">
+          <div class="mt-2 max-h-48 overflow-auto">
             <button
               v-for="val in filteredValues"
               :key="val"
-              class="flex w-full items-center gap-2 px-2 py-1 text-left text-xs hover:bg-terminal-green-dim"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-terminal-green-dim"
               @click="toggleValue(val)"
             >
               <span class="inline-block h-2 w-2 border border-terminal-green" :class="isValueSelected(val) ? 'bg-terminal-green' : ''"></span>
@@ -89,6 +92,7 @@ import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useClickOutside } from '../composables/useClickOutside';
 import { useLocale } from '../composables/useLocale';
 import type { TxType } from '../types';
+import AppIcon from './AppIcon.vue';
 
 const filters = useFilterStore();
 const tx = useTransactionsStore();
