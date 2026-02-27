@@ -18,8 +18,8 @@
 }
 
 [data-theme="light"] {
-  --c-bg: 255 255 255;
-  --c-surface: 243 244 246;
+  --c-bg: 250 250 250;
+  --c-surface: 255 255 255;
   --c-primary: 17 24 39;
   --c-primary-dim: 229 231 235;
   --c-amber: 245 158 11;
@@ -134,6 +134,12 @@
     content: '█';
     @apply animate-blink text-terminal-green;
   }
+
+  /* Popout / dropdown panel */
+  .term-popout {
+    @apply border border-terminal-border bg-terminal-surface px-1 py-3 shadow-lg;
+    min-width: 140px;
+  }
 }
 
 /* ── Scanline Overlay ─────────────────────────────── */
@@ -236,23 +242,33 @@
   border-radius: 0.5rem;
 }
 
-/* Flat button style overrides */
+/* Flat button style overrides — no border, filled or ghost */
 [data-theme="light"] .term-btn {
-  border-width: 2px;
+  border-color: transparent;
+  background-color: rgb(var(--c-primary-dim));
+  color: rgb(var(--c-primary));
   font-weight: 600;
   transition: all 200ms;
 }
 [data-theme="light"] .term-btn:hover {
-  transform: scale(1.03);
+  background-color: rgb(var(--c-primary));
+  color: rgb(var(--c-on-primary));
+  transform: none;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
 }
 
 [data-theme="light"] .term-btn-danger {
-  border-width: 2px;
+  border-color: transparent;
+  background-color: rgb(var(--c-red) / 0.1);
+  color: rgb(var(--c-red));
   font-weight: 600;
   transition: all 200ms;
 }
 [data-theme="light"] .term-btn-danger:hover {
-  transform: scale(1.03);
+  background-color: rgb(var(--c-red));
+  color: rgb(var(--c-on-primary));
+  transform: none;
+  box-shadow: 0 2px 8px rgb(var(--c-red) / 0.2);
 }
 
 /* Flat input focus — solid border, no glow */
@@ -282,4 +298,58 @@
 [data-theme="light"] ::-webkit-scrollbar-thumb {
   background: #D1D5DB;
   border-radius: 4px;
+}
+
+/* Popout speech-bubble styling */
+[data-theme="light"] .term-popout {
+  border-color: transparent;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.14);
+  padding: 0.75rem 0.5rem;
+}
+[data-theme="light"] .term-popout::before {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: rgb(var(--c-surface));
+  transform: rotate(45deg);
+  box-shadow: -1px -1px 2px rgb(0 0 0 / 0.04);
+}
+/* Arrow pointing down (popout opens upward, default) */
+[data-theme="light"] .term-popout[class*="bottom-full"]::before {
+  bottom: -5px;
+  left: 16px;
+}
+/* Arrow pointing left (popout opens right, collapsed sidebar) */
+[data-theme="light"] .term-popout[class*="left-full"]::before {
+  left: -5px;
+  bottom: 12px;
+}
+/* Arrow pointing up (popout opens downward) */
+[data-theme="light"] .term-popout[class*="top-full"]::before {
+  top: -5px;
+  right: 12px;
+}
+
+/* Material elevation shadows */
+[data-theme="light"] .term-pane {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  border-color: transparent;
+}
+[data-theme="light"] .term-window {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  border-color: transparent;
+}
+[data-theme="light"] .term-stat {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+  border-color: transparent;
+}
+[data-theme="light"] aside {
+  box-shadow: 1px 0 3px rgb(0 0 0 / 0.06);
+  border-right-color: transparent;
+}
+[data-theme="light"] header {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+  border-bottom-color: transparent;
 }
