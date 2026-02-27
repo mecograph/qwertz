@@ -165,10 +165,12 @@ import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
 import type { Tx } from '../types';
+import { useOpsLogStore } from '../stores/useOpsLogStore';
 
 const tx = useTransactionsStore();
 const toast = useToastStore();
 const notifications = useNotificationStore();
+const opsLog = useOpsLogStore();
 const { t, formatCurrency } = useLocale();
 const search = ref('');
 const page = ref(1);
@@ -266,6 +268,7 @@ function duplicate(id: string) {
   openMenu.value = null;
   toast.push('success', t('feedback_row_duplicated'));
   notifications.add(t('feedback_row_duplicated'), t('feedback_row_duplicated_desc'), 'info');
+  opsLog.add('info', 'grid.row.duplicated', id);
 }
 
 function remove(id: string) {
@@ -273,16 +276,19 @@ function remove(id: string) {
   openMenu.value = null;
   toast.push('warning', t('feedback_row_deleted'));
   notifications.add(t('feedback_row_deleted'), t('feedback_row_deleted_desc'), 'warning');
+  opsLog.add('warning', 'grid.row.deleted', id);
 }
 
 function undo() {
   tx.undo();
   toast.push('info', t('feedback_undo_applied'));
+  opsLog.add('info', 'grid.undo', 'undo');
 }
 
 function redo() {
   tx.redo();
   toast.push('info', t('feedback_redo_applied'));
+  opsLog.add('info', 'grid.redo', 'redo');
 }
 
 function onDocClick() {

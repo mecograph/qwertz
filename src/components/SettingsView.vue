@@ -91,6 +91,40 @@
       <p v-else class="mt-2 text-xs text-terminal-muted">{{ t('settings_no_imports') }}</p>
     </div>
 
+
+
+    <!-- Activity Log -->
+    <div class="term-pane">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_activity_log') }}</h2>
+        <div class="flex gap-2">
+          <button class="term-btn px-2 py-1 text-xs" @click="exportOpsLog">{{ t('settings_export_log') }}</button>
+          <button class="term-btn px-2 py-1 text-xs" @click="opsLog.clear()">{{ t('settings_clear_log') }}</button>
+        </div>
+      </div>
+      <div v-if="opsLog.entries.length" class="mt-3 max-h-48 overflow-auto border border-terminal-border">
+        <table class="w-full text-xs">
+          <thead class="sticky top-0 bg-terminal-bg">
+            <tr>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_col_date') }}</th>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_log_level') }}</th>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_log_event') }}</th>
+              <th class="p-2 text-left text-terminal-amber">{{ t('settings_log_message') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="entry in opsLog.entries.slice(0, 50)" :key="entry.id" class="border-t border-terminal-border">
+              <td class="p-2">{{ formatHistoryDate(entry.createdAt) }}</td>
+              <td class="p-2">{{ entry.level }}</td>
+              <td class="p-2">{{ entry.event }}</td>
+              <td class="p-2">{{ entry.message }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="mt-2 text-xs text-terminal-muted">{{ t('settings_no_log') }}</p>
+    </div>
+
     <!-- Danger Zone -->
     <div class="term-pane border-terminal-red">
       <h2 class="text-sm font-bold text-terminal-red">{{ t('settings_danger_zone') }}</h2>
@@ -126,6 +160,7 @@ import { useImportHistory } from '../composables/useImportHistory';
 import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
+import { useOpsLogStore } from '../stores/useOpsLogStore';
 import { getImportQuotaState } from '../utils/importGuard';
 import TermConfirmModal from './TermConfirmModal.vue';
 
@@ -139,6 +174,7 @@ const { t, lang } = useLocale();
 const showPurgeConfirm = ref(false);
 const toast = useToastStore();
 const notifications = useNotificationStore();
+const opsLog = useOpsLogStore();
 const quota = computed(() => getImportQuotaState());
 const quotaMb = computed(() => (quota.value.bytes / (1024 * 1024)).toFixed(1));
 
@@ -163,6 +199,16 @@ function exportJson() {
   URL.revokeObjectURL(url);
 }
 
+function exportOpsLog() {
+  const blob = new Blob([JSON.stringify({ entries: opsLog.entries }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tx-ops-log.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function purge() {
   clearRows();
   tx.setRows([]);
@@ -170,5 +216,6 @@ function purge() {
   showPurgeConfirm.value = false;
   toast.push('info', t('feedback_data_purged'));
   notifications.add(t('feedback_data_purged_title'), t('feedback_data_purged_desc'), 'warning');
+  opsLog.add('warning', 'settings.purge', 'local data purged');
 }
 </script>
