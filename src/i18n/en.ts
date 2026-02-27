@@ -218,6 +218,7 @@ export const en = {
   auth_signed_in: 'Signed in successfully.',
   auth_failed: 'Authentication failed.',
   auth_mock_notice: 'MVP note: running in local mock auth mode until Firebase SDK is connected.',
+  auth_firebase_scaffold_notice: 'Firebase mode selected: SDK wiring is the next step (current scaffold will throw until implemented).',
   auth_sign_out: 'Sign out',
 
   // Common

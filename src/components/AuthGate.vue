@@ -15,7 +15,7 @@
       </button>
     </div>
 
-    <p class="mt-3 text-[11px] text-terminal-muted">{{ t('auth_mock_notice') }}</p>
+    <p class="mt-3 text-[11px] text-terminal-muted">{{ auth.providerMode === 'firebase' ? t('auth_firebase_scaffold_notice') : t('auth_mock_notice') }}</p>
   </section>
 </template>
 
@@ -33,7 +33,7 @@ const email = ref('');
 
 async function signIn() {
   try {
-    await auth.signInWithEmailLinkMock(email.value);
+    await auth.signInWithEmailLink(email.value);
     toast.push('success', t('auth_signed_in'));
   } catch (error) {
     const appError = toAppError(error, t('auth_failed'));

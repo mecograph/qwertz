@@ -402,3 +402,16 @@ Diese Punkte adressieren die “harten Kanten” direkt und sind aus Principal/C
 - Kein vollwertiges Event-Sourcing-Framework.
 - Kein sofortiger Push-first Notification-Stack (In-App zuerst).
 - Keine unbegrenzten Uploads ohne technische Schutzgrenzen.
+
+## Umsetzungsstand: Start der Mock→Firebase-Migration
+
+Bereits umgesetzt in Codebasis:
+- `backendClient` ist auf Provider-Switch vorbereitet (`VITE_BACKEND_PROVIDER=mock|firebase`).
+- `auth` ist auf Provider-Switch vorbereitet (`VITE_AUTH_PROVIDER=mock|firebase`).
+- Mock-Provider bleibt Standard, damit die App weiterhin lauffähig ist.
+- Firebase-Provider sind als Scaffold angelegt und werfen aktuell bewusst einen klaren Fehler, bis SDK + echte Adapter implementiert sind.
+
+Nächste technische Schritte (direkt anschlussfähig):
+1. Firebase SDK installieren und in `authClientFirebase.ts` verdrahten (Email-Link + Session-Rehydrate).
+2. `backendClientFirebase.ts` auf Firestore/Storage umsetzen (zuerst `list/create import meta`).
+3. Danach encrypted upload/download End-to-End über Storage aktivieren.

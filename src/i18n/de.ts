@@ -220,6 +220,7 @@ export const de: Record<TranslationKey, string> = {
   auth_signed_in: 'Erfolgreich angemeldet.',
   auth_failed: 'Authentifizierung fehlgeschlagen.',
   auth_mock_notice: 'MVP-Hinweis: Aktuell lokaler Mock-Auth-Modus bis Firebase SDK verbunden ist.',
+  auth_firebase_scaffold_notice: 'Firebase-Modus aktiv: Als Nächstes folgt die SDK-Integration (das aktuelle Scaffold wirft bis zur Implementierung Fehler).',
   auth_sign_out: 'Abmelden',
 
   // Common
