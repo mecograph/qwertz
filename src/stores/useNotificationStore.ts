@@ -1,41 +1,28 @@
 import { defineStore } from 'pinia';
+import { notificationClient, type AppNotification, type NotificationSeverity } from '../services/notificationClient';
+import { useAuthStore } from './useAuthStore';
 
-export type NotificationSeverity = 'info' | 'success' | 'warning' | 'error';
-
-export interface AppNotification {
-  id: string;
-  title: string;
-  message: string;
-  severity: NotificationSeverity;
-  createdAt: number;
-  readAt: number | null;
-}
-
-const STORAGE_KEY = 'tx-notifications-v1';
-
-function load(): AppNotification[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persist(items: AppNotification[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+export type { AppNotification, NotificationSeverity };
 
 export const useNotificationStore = defineStore('notifications', {
   state: () => ({
-    items: load() as AppNotification[],
+    items: [] as AppNotification[],
   }),
   getters: {
     unreadCount: (state) => state.items.filter((item) => item.readAt === null).length,
   },
   actions: {
-    add(title: string, message: string, severity: NotificationSeverity = 'info') {
-      const entry: AppNotification = {
+    async refresh() {
+      const auth = useAuthStore();
+      try {
+        this.items = await notificationClient.list(auth.user);
+      } catch (error) {
+        console.warn('[notifications] refresh failed', error);
+      }
+    },
+    async add(title: string, message: string, severity: NotificationSeverity = 'info') {
+      const auth = useAuthStore();
+      const fallback: AppNotification = {
         id: crypto.randomUUID(),
         title,
         message,
@@ -43,21 +30,42 @@ export const useNotificationStore = defineStore('notifications', {
         createdAt: Date.now(),
         readAt: null,
       };
-      this.items = [entry, ...this.items].slice(0, 100);
-      persist(this.items);
+
+      try {
+        const entry = await notificationClient.create(auth.user, { title, message, severity });
+        this.items = [entry, ...this.items].slice(0, 100);
+      } catch (error) {
+        console.warn('[notifications] add failed; keeping local fallback', error);
+        this.items = [fallback, ...this.items].slice(0, 100);
+      }
     },
-    markRead(id: string) {
+    async markRead(id: string) {
+      const auth = useAuthStore();
+      try {
+        await notificationClient.markRead(auth.user, id);
+      } catch (error) {
+        console.warn('[notifications] markRead failed', error);
+      }
       this.items = this.items.map((item) => (item.id === id ? { ...item, readAt: item.readAt ?? Date.now() } : item));
-      persist(this.items);
     },
-    markAllRead() {
+    async markAllRead() {
+      const auth = useAuthStore();
+      try {
+        await notificationClient.markAllRead(auth.user);
+      } catch (error) {
+        console.warn('[notifications] markAllRead failed', error);
+      }
       const now = Date.now();
       this.items = this.items.map((item) => ({ ...item, readAt: item.readAt ?? now }));
-      persist(this.items);
     },
-    clear() {
+    async clear() {
+      const auth = useAuthStore();
+      try {
+        await notificationClient.clear(auth.user);
+      } catch (error) {
+        console.warn('[notifications] clear failed', error);
+      }
       this.items = [];
-      persist([]);
     },
   },
 });

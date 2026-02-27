@@ -435,3 +435,12 @@ Nächster Schritt umgesetzt:
 - Analytics-Overview wird unter `users/{uid}/analytics/overview` materialisiert.
 
 Hinweis: Die Umsetzung nutzt aktuell REST-Calls (gleicher Grund wie bei Auth: SDK-Installation in dieser Umgebung blockiert). Bei verfügbarer SDK-Installation sollte auf das offizielle Firebase Web SDK migriert werden.
+
+### Update: Notifications in Firebase-Provider
+
+Der Notification-Stack ist jetzt ebenfalls provider-basiert:
+- Mock-Modus: lokale Persistenz pro User in `localStorage`.
+- Firebase-Modus: Ablage unter `users/{uid}/notifications/{notificationId}` via Firestore REST.
+- `useNotificationStore` lädt Benachrichtigungen bei Session-Wechsel neu und schreibt/markiert/cleart gegen den aktiven Provider.
+
+Damit sind Notifications im Firebase-Modus nicht mehr rein lokal, sondern backend-persistiert.

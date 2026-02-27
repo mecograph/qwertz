@@ -138,6 +138,7 @@ onMounted(async () => {
     opsLog.add('error', 'auth.email_link.failed', appError.message);
   }
 
+  notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
   syncAnalytics();
@@ -148,6 +149,7 @@ onUnmounted(() => {
 });
 
 watch(() => auth.user?.uid, () => {
+  notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
   syncAnalytics();
