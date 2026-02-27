@@ -67,6 +67,21 @@
       </div>
     </div>
 
+
+
+    <!-- Analytics Snapshot -->
+    <div class="term-pane">
+      <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_analytics_snapshot') }}</h2>
+      <p v-if="analytics" class="mt-2 text-xs text-terminal-muted">{{ t('settings_analytics_updated') }}: {{ formatHistoryDate(analytics.updatedAt) }}</p>
+      <div v-if="analytics" class="mt-3 grid gap-2 sm:grid-cols-2">
+        <div class="term-stat text-xs">{{ t('kpi_income') }}: {{ formatCurrency(analytics.totals.income) }}</div>
+        <div class="term-stat text-xs">{{ t('kpi_expenses') }}: {{ formatCurrency(analytics.totals.expense) }}</div>
+        <div class="term-stat text-xs">{{ t('kpi_net') }}: {{ formatCurrency(analytics.totals.net) }}</div>
+        <div class="term-stat text-xs">{{ t('kpi_transactions') }}: {{ analytics.totals.transactions }}</div>
+      </div>
+      <p v-else class="mt-2 text-xs text-terminal-muted">{{ t('settings_no_analytics') }}</p>
+    </div>
+
     <!-- Import History -->
     <div class="term-pane">
       <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_import_history') }}</h2>
@@ -174,7 +189,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useUiStore } from '../stores/useUiStore';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useLocaleStore } from '../stores/useLocaleStore';
@@ -185,25 +200,44 @@ import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
 import { useOpsLogStore } from '../stores/useOpsLogStore';
 import { getImportQuotaState } from '../utils/importGuard';
+import { getAnalyticsOverview, type AnalyticsOverview } from '../services/backendClient';
+import { useAuthStore } from '../stores/useAuthStore';
 import TermConfirmModal from './TermConfirmModal.vue';
 
 const emit = defineEmits<{ 'upload-more': [file: File]; 'import-json-more': [] }>();
 
 const ui = useUiStore();
+const auth = useAuthStore();
 const tx = useTransactionsStore();
 const localeStore = useLocaleStore();
 const importHistory = useImportHistory();
-const { t, lang } = useLocale();
+const { t, lang, formatCurrency } = useLocale();
 const showPurgeConfirm = ref(false);
 const toast = useToastStore();
 const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
 const quota = computed(() => getImportQuotaState());
 const quotaMb = computed(() => (quota.value.bytes / (1024 * 1024)).toFixed(1));
+const analytics = ref<AnalyticsOverview | null>(null);
 
-onMounted(() => {
+onMounted(async () => {
   importHistory.refresh();
+  if (auth.user) analytics.value = await getAnalyticsOverview(auth.user);
 });
+
+watch(() => auth.user?.uid, () => {
+  refreshAnalytics();
+});
+
+
+
+async function refreshAnalytics() {
+  if (!auth.user) {
+    analytics.value = null;
+    return;
+  }
+  analytics.value = await getAnalyticsOverview(auth.user);
+}
 
 function formatHistoryDate(ts: number) {
   const loc = lang.value === 'de' ? 'de-DE' : 'en-GB';
@@ -214,6 +248,7 @@ function onUploadMore(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
   emit('upload-more', file);
+  refreshAnalytics();
 }
 
 function exportJson() {
@@ -237,6 +272,7 @@ async function extendRetention(importId: string) {
   if (ok) {
     toast.push('success', t('settings_extend_retention_ok'));
     notifications.add(t('settings_extend_retention_ok'), t('settings_extend_retention_desc'), 'success');
+    refreshAnalytics();
   } else {
     toast.push('warning', t('settings_extend_retention_fail'), 4200);
   }
@@ -268,6 +304,7 @@ async function purge() {
   showPurgeConfirm.value = false;
   toast.push('info', t('feedback_data_purged'));
   notifications.add(t('feedback_data_purged_title'), t('feedback_data_purged_desc'), 'warning');
+  refreshAnalytics();
   opsLog.add('warning', 'settings.purge', 'local data purged');
 }
 </script>

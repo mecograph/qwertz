@@ -76,7 +76,7 @@ import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 import { useOpsLogStore } from './stores/useOpsLogStore';
 import { recordImport, validateImport } from './utils/importGuard';
-import { encryptAndStoreOriginal } from './services/backendClient';
+import { encryptAndStoreOriginal, materializeAnalyticsOverview } from './services/backendClient';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
@@ -100,6 +100,12 @@ const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
 
 const handleHashChange = () => ui.syncTabFromLocation();
 
+
+async function syncAnalytics() {
+  if (!auth.user) return;
+  await materializeAnalyticsOverview(auth.user, tx.rows);
+}
+
 async function runRetentionSweepWithFeedback() {
   const result = await importHistory.runRetentionSweep();
   result.reminders.forEach((item) => {
@@ -119,6 +125,7 @@ onMounted(() => {
   window.addEventListener('hashchange', handleHashChange);
   importHistory.refresh();
   runRetentionSweepWithFeedback();
+  syncAnalytics();
 });
 
 onUnmounted(() => {
@@ -128,7 +135,12 @@ onUnmounted(() => {
 watch(() => auth.user?.uid, () => {
   importHistory.refresh();
   runRetentionSweepWithFeedback();
+  syncAnalytics();
 });
+
+watch(() => tx.rows, () => {
+  syncAnalytics();
+}, { deep: true });
 
 async function onUpload(file: File) {
   const decision = validateImport(file.size);
