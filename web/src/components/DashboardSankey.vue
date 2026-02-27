@@ -5,7 +5,7 @@
       <p class="text-xs text-terminal-muted">{{ t('dashboard_desc') }}</p>
     </div>
 
-    <div class="mt-3 grid gap-3 md:grid-cols-5">
+    <div class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
       <div class="term-stat" v-for="item in kpisList" :key="item.label">
         <p class="text-xs text-terminal-muted">{{ item.label }}</p>
         <p class="font-bold" :class="item.tone">{{ item.value }}</p>
