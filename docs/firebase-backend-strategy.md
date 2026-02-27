@@ -444,3 +444,11 @@ Der Notification-Stack ist jetzt ebenfalls provider-basiert:
 - `useNotificationStore` lädt Benachrichtigungen bei Session-Wechsel neu und schreibt/markiert/cleart gegen den aktiven Provider.
 
 Damit sind Notifications im Firebase-Modus nicht mehr rein lokal, sondern backend-persistiert.
+
+### Update: Security Rules + Runtime Guardrails
+
+Für den nächsten Migrationsschritt wurden die operativen Baselines ergänzt:
+- `firestore.rules` mit UID-Scoping und Feldrestriktionen für Imports/Notifications/Analytics.
+- `storage.rules` mit UID-gebundenem Zugriff und Upload-Constraints für encrypted blobs.
+- `firebase.json` + `firestore.indexes.json` für deploybare Firebase-Konfiguration.
+- Runtime-Checks beim App-Start warnen bei fehlenden Firebase-Keys oder inkonsistentem Provider-Setup.
