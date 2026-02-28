@@ -1,8 +1,8 @@
 <template>
-  <div class="h-screen overflow-hidden bg-terminal-bg text-terminal-green" :class="ui.theme === 'dark' ? 'scanlines font-mono' : 'font-sans'">
+  <div class="h-dvh overflow-hidden bg-terminal-bg text-terminal-green" :class="ui.theme === 'dark' ? 'scanlines font-mono' : 'font-sans'">
     <!-- Splash mode: no chrome, centered content -->
     <template v-if="mode === 'splash'">
-      <div class="flex h-full items-center justify-center p-4">
+      <div class="flex h-full items-center justify-center p-4 pb-20 lg:pb-4">
         <slot />
       </div>
     </template>
@@ -13,7 +13,7 @@
         <!-- Desktop sidebar (app mode only) -->
         <aside
           v-if="mode === 'app'"
-          class="hidden h-screen shrink-0 border-r border-terminal-border bg-terminal-surface transition-[width] duration-200 lg:flex lg:flex-col"
+          class="hidden h-dvh shrink-0 border-r border-terminal-border bg-terminal-surface transition-[width] duration-200 lg:flex lg:flex-col"
           :class="ui.sidebarCollapsed ? 'w-[52px]' : 'w-60'"
         >
           <!-- Header -->
@@ -138,8 +138,8 @@
             >
               <div class="h-7 w-7 shrink-0" style="border-radius: 50%; overflow: hidden">
                 <img
-                  v-if="profile.avatarDataUrl"
-                  :src="profile.avatarDataUrl"
+                  v-if="profile.avatarUrl"
+                  :src="profile.avatarUrl"
                   alt=""
                   class="h-full w-full object-cover"
                 />
@@ -185,26 +185,34 @@
         </div>
       </div>
 
-      <!-- Mobile bottom nav (app mode only) -->
-      <nav
-        v-if="mode === 'app'"
-        class="mobile-bottom-nav fixed z-30 flex lg:hidden"
-        :class="ui.theme === 'light'
-          ? 'bottom-3 left-3 right-3 rounded-[28px] bg-white/55 backdrop-blur-xl backdrop-saturate-[1.8] shadow-[0_4px_24px_rgb(0_0_0/0.08)]'
-          : 'bottom-0 left-0 right-0 border-t border-terminal-border bg-terminal-surface'"
-      >
-        <button
-          v-for="item in allTabs"
-          :key="item.key"
-          class="flex flex-1 flex-col items-center gap-0.5 py-2"
-          :class="ui.tab === item.key ? 'text-terminal-green' : 'text-terminal-muted'"
-          @click="ui.setTab(item.key)"
-        >
-          <AppIcon :name="item.icon" :size="20" />
-          <span class="text-[10px]">{{ item.label }}</span>
-        </button>
-      </nav>
     </template>
+
+    <!-- Mobile bottom nav (shown when authenticated) -->
+    <nav
+      v-if="auth.isAuthenticated"
+      class="mobile-bottom-nav fixed z-30 flex lg:hidden"
+      :class="ui.theme === 'light'
+        ? 'bottom-3 left-3 right-3 rounded-[28px] bg-white/55 backdrop-blur-xl backdrop-saturate-[1.8] shadow-[0_4px_24px_rgb(0_0_0/0.08)]'
+        : 'bottom-0 left-0 right-0 border-t border-terminal-border bg-terminal-surface'"
+    >
+      <button
+        v-for="item in allTabs"
+        :key="item.key"
+        class="flex flex-1 flex-col items-center gap-0.5 py-2"
+        :class="ui.tab === item.key ? 'text-terminal-green' : 'text-terminal-muted'"
+        @click="ui.setTab(item.key)"
+      >
+        <AppIcon :name="item.icon" :size="20" />
+        <span class="text-[10px]">{{ item.label }}</span>
+      </button>
+      <button
+        class="flex flex-1 flex-col items-center gap-0.5 py-2 text-terminal-muted"
+        @click="auth.signOut()"
+      >
+        <AppIcon name="sign-out" :size="20" />
+        <span class="text-[10px]">{{ t('auth_sign_out') }}</span>
+      </button>
+    </nav>
   </div>
 </template>
 
