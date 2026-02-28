@@ -1,19 +1,13 @@
 import { computed } from 'vue';
 import { useLocaleStore } from '../stores/useLocaleStore';
-import { useUiStore } from '../stores/useUiStore';
 import { en } from '../i18n/en';
 import { de } from '../i18n/de';
 import type { TranslationKey } from '../i18n/en';
 
 const messages = { en, de } as const;
 
-function stripBrackets(text: string): string {
-  return text.replace(/^\[\s*/, '').replace(/\s*\]$/, '');
-}
-
 export function useLocale() {
   const locale = useLocaleStore();
-  const ui = useUiStore();
 
   const lang = computed(() => locale.lang);
 
@@ -24,9 +18,7 @@ export function useLocale() {
   const dateLocale = computed(() => (locale.lang === 'de' ? 'de-DE' : 'en-GB'));
 
   function t(key: TranslationKey): string {
-    const raw = messages[locale.lang][key];
-    if (ui.theme === 'light') return stripBrackets(raw);
-    return raw;
+    return messages[locale.lang][key];
   }
 
   function formatCurrency(value: number): string {
