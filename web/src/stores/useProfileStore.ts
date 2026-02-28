@@ -4,17 +4,20 @@ const PROFILE_KEY = 'tx-profile';
 
 interface ProfileState {
   displayName: string;
-  avatarDataUrl: string;
+  avatarUrl: string;
 }
 
 function loadProfile(): ProfileState {
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { displayName: parsed.displayName ?? '', avatarUrl: '' };
+    }
   } catch {
     // ignore
   }
-  return { displayName: '', avatarDataUrl: '' };
+  return { displayName: '', avatarUrl: '' };
 }
 
 export const useProfileStore = defineStore('profile', {
@@ -24,19 +27,14 @@ export const useProfileStore = defineStore('profile', {
       this.displayName = name;
       this.persist();
     },
-    setAvatar(dataUrl: string) {
-      this.avatarDataUrl = dataUrl;
-      this.persist();
+    setAvatar(url: string) {
+      this.avatarUrl = url;
     },
     removeAvatar() {
-      this.avatarDataUrl = '';
-      this.persist();
+      this.avatarUrl = '';
     },
     persist() {
-      localStorage.setItem(
-        PROFILE_KEY,
-        JSON.stringify({ displayName: this.displayName, avatarDataUrl: this.avatarDataUrl }),
-      );
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ displayName: this.displayName }));
     },
   },
 });

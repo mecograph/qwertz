@@ -313,6 +313,34 @@ export async function listImportEvents(user: AuthUser, importId: string): Promis
     .sort((a, b) => b.timestamp - a.timestamp);
 }
 
+const AVATAR_KEY = 'tx-profile-avatar';
+
+export async function uploadProfileAvatar(user: AuthUser, blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const avatars = JSON.parse(localStorage.getItem(AVATAR_KEY) || '{}');
+      avatars[user.uid] = dataUrl;
+      localStorage.setItem(AVATAR_KEY, JSON.stringify(avatars));
+      resolve(dataUrl);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+export async function deleteProfileAvatar(user: AuthUser): Promise<void> {
+  const avatars = JSON.parse(localStorage.getItem(AVATAR_KEY) || '{}');
+  delete avatars[user.uid];
+  localStorage.setItem(AVATAR_KEY, JSON.stringify(avatars));
+}
+
+export async function getProfileAvatarUrl(user: AuthUser): Promise<string | null> {
+  const avatars = JSON.parse(localStorage.getItem(AVATAR_KEY) || '{}');
+  return avatars[user.uid] || null;
+}
+
 export async function updateImportWrappedDek(user: AuthUser, importId: string, wrappedDek: EncryptedPayload) {
   const items = loadImports();
   const next = items.map((item) => {

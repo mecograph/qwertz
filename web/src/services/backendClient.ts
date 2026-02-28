@@ -19,3 +19,6 @@ export const updateImportWrappedDek = selected.updateImportWrappedDek;
 export const revertImport = selected.revertImport;
 export const writeImportEvent = selected.writeImportEvent;
 export const listImportEvents = selected.listImportEvents;
+export const uploadProfileAvatar = selected.uploadProfileAvatar;
+export const deleteProfileAvatar = selected.deleteProfileAvatar;
+export const getProfileAvatarUrl = selected.getProfileAvatarUrl;

@@ -1,5 +1,5 @@
 import { doc, setDoc, getDoc, getDocs, deleteDoc, collection, orderBy, query } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getBytes, deleteObject } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getBytes, deleteObject, getDownloadURL } from 'firebase/storage';
 import { getFirebaseFirestore, getFirebaseStorage } from './firebaseApp';
 import type { AuthUser } from '../stores/useAuthStore';
 import type { Tx, ImportEvent, ImportEventType } from '../types';
@@ -300,4 +300,31 @@ export async function listImportEvents(user: AuthUser, importId: string): Promis
       detail: data.detail as string | undefined,
     };
   });
+}
+
+function avatarStoragePath(uid: string) {
+  return `users/${uid}/profile/avatar.jpg`;
+}
+
+export async function uploadProfileAvatar(user: AuthUser, blob: Blob): Promise<string> {
+  const path = avatarStoragePath(user.uid);
+  const ref = storageRef(getFirebaseStorage(), path);
+  await uploadBytes(ref, blob, { contentType: 'image/jpeg' });
+  return getDownloadURL(ref);
+}
+
+export async function deleteProfileAvatar(user: AuthUser): Promise<void> {
+  try {
+    await deleteObject(storageRef(getFirebaseStorage(), avatarStoragePath(user.uid)));
+  } catch {
+    // Ignore if not found
+  }
+}
+
+export async function getProfileAvatarUrl(user: AuthUser): Promise<string | null> {
+  try {
+    return await getDownloadURL(storageRef(getFirebaseStorage(), avatarStoragePath(user.uid)));
+  } catch {
+    return null;
+  }
 }
