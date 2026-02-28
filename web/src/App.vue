@@ -4,9 +4,17 @@
       <FilterBar v-if="mappingDone" />
     </template>
 
-    <div v-if="auth.initializing" class="flex flex-col items-center justify-center gap-4 py-20">
-      <div class="h-1 w-48 overflow-hidden bg-terminal-green-dim" :style="{ borderRadius: ui.theme === 'light' ? '9999px' : '0' }">
-        <div class="h-full w-1/2 animate-pulse bg-terminal-green" :style="{ borderRadius: ui.theme === 'light' ? '9999px' : '0' }"></div>
+    <div v-if="showLoading" class="flex flex-col items-center justify-center gap-4 py-20">
+      <div
+        class="h-1 w-48 overflow-hidden bg-terminal-green-dim"
+        :class="loadingFadingOut ? 'init-track-fade' : ''"
+        :style="{ borderRadius: ui.theme === 'light' ? '9999px' : '0' }"
+      >
+        <div
+          class="h-full bg-terminal-green"
+          :class="loadingFadingOut ? 'init-bar-fill' : 'init-bar'"
+          :style="{ borderRadius: ui.theme === 'light' ? '9999px' : '0' }"
+        ></div>
       </div>
     </div>
 
@@ -27,7 +35,7 @@
 
     <template v-else>
       <ProcessingView :active="ui.processing" />
-      <div v-if="!mappingDone" class="space-y-4">
+      <div v-if="!mappingDone" class="h-full overflow-auto space-y-4 pb-20 lg:pb-0">
         <SourceSelect
           :sheets="importStore.sheets"
           :selected-sheet="importStore.selectedSheet"
@@ -48,9 +56,9 @@
 
       <template v-else>
         <div class="h-full min-h-0">
-          <DashboardSankey v-show="ui.tab === 'Dashboard'" class="h-full" />
+          <DashboardSankey v-show="ui.tab === 'Dashboard'" class="h-full overflow-auto pb-20 lg:pb-0" />
           <ChartsView v-show="ui.tab === 'Charts'" class="h-full overflow-auto pb-20 lg:pb-0" />
-          <DataGrid v-show="ui.tab === 'Data'" class="h-full" />
+          <DataGrid v-show="ui.tab === 'Data'" class="h-full overflow-auto pb-20 lg:pb-0" />
           <SettingsView v-show="ui.tab === 'Settings'" class="h-full overflow-auto pb-20 lg:pb-0" @upload-more="onUpload" @import-json-more="onImportJson" />
           <ProfileView v-show="ui.tab === 'Profile'" class="h-full overflow-auto pb-20 lg:pb-0" />
         </div>
@@ -91,8 +99,9 @@ import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 import { useOpsLogStore } from './stores/useOpsLogStore';
 import { recordImport, validateImport } from './utils/importGuard';
-import { encryptAndStoreOriginal, materializeAnalyticsOverview, writeImportEvent } from './services/backendClient';
+import { encryptAndStoreOriginal, materializeAnalyticsOverview, writeImportEvent, getProfileAvatarUrl } from './services/backendClient';
 import { useCryptoGate } from './composables/useCryptoGate';
+import { useProfileStore } from './stores/useProfileStore';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
@@ -104,8 +113,11 @@ const toast = useToastStore();
 const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
 const cryptoGate = useCryptoGate();
+const profile = useProfileStore();
 const { t } = useLocale();
 const mappingDone = ref(tx.rows.length > 0);
+const showLoading = ref(auth.initializing);
+const loadingFadingOut = ref(false);
 const currentImportId = ref<string | undefined>();
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
@@ -167,16 +179,28 @@ onUnmounted(() => {
   window.removeEventListener('hashchange', handleHashChange);
 });
 
-watch(() => auth.user?.uid, () => {
+watch(() => auth.user?.uid, async () => {
   notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
   syncAnalytics();
+  if (auth.user) {
+    const url = await getProfileAvatarUrl(auth.user);
+    if (url) profile.setAvatar(url);
+  }
 });
 
 watch(() => tx.rows, () => {
   syncAnalytics();
 }, { deep: true });
+
+watch(() => auth.initializing, (val) => {
+  if (!val) {
+    // Fill to 100% (700ms), fade starts at 650ms, done by ~950ms
+    loadingFadingOut.value = true;
+    setTimeout(() => { showLoading.value = false; }, 950);
+  }
+});
 
 async function onUpload(file: File) {
   const decision = validateImport(file.size);
@@ -231,7 +255,10 @@ function onImportJson() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'application/json';
+  input.style.display = 'none';
+  document.body.appendChild(input);
   input.onchange = () => {
+    document.body.removeChild(input);
     const file = input.files?.[0];
     if (!file) return;
 
