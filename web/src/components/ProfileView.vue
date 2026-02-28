@@ -7,8 +7,8 @@
       <div class="mt-4 flex items-center gap-5">
         <div class="h-20 w-20 shrink-0" style="border-radius: 50%; overflow: hidden">
           <img
-            v-if="profile.avatarDataUrl"
-            :src="profile.avatarDataUrl"
+            v-if="profile.avatarUrl"
+            :src="profile.avatarUrl"
             alt="Avatar"
             class="h-full w-full object-cover"
           />
@@ -17,12 +17,11 @@
           </div>
         </div>
         <div class="space-y-2">
-          <label class="term-btn inline-flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs">
+          <button class="term-btn inline-flex items-center gap-2 px-3 py-1.5 text-xs" @click="triggerAvatarUpload">
             {{ t('profile_upload_avatar') }}
-            <input class="hidden" type="file" accept="image/*" @change="onAvatarUpload" />
-          </label>
+          </button>
           <button
-            v-if="profile.avatarDataUrl"
+            v-if="profile.avatarUrl"
             class="block text-xs text-terminal-muted hover:text-terminal-red"
             @click="removeAvatar"
           >
@@ -124,6 +123,7 @@ import { useUiStore } from '../stores/useUiStore';
 import { useLocaleStore } from '../stores/useLocaleStore';
 import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
+import { uploadProfileAvatar, deleteProfileAvatar } from '../services/backendClient';
 import AppIcon from './AppIcon.vue';
 
 const auth = useAuthStore();
@@ -147,9 +147,23 @@ const providerLabel = computed(() => {
   return t('profile_provider_mock');
 });
 
-function onAvatarUpload(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
+function triggerAvatarUpload() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    processAvatarFile(file);
+    document.body.removeChild(input);
+  };
+  input.click();
+}
+
+function processAvatarFile(file: File) {
+  if (!auth.user) return;
   const reader = new FileReader();
   reader.onload = () => {
     const img = new Image();
@@ -163,17 +177,31 @@ function onAvatarUpload(event: Event) {
       const w = img.width * scale;
       const h = img.height * scale;
       ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-      profile.setAvatar(canvas.toDataURL('image/jpeg', 0.8));
-      toast.push('success', t('profile_saved'));
+      canvas.toBlob(async (blob) => {
+        if (!blob || !auth.user) return;
+        try {
+          const url = await uploadProfileAvatar(auth.user, blob);
+          profile.setAvatar(url);
+          toast.push('success', t('profile_saved'));
+        } catch {
+          toast.push('error', t('profile_avatar_upload_failed'), 4200);
+        }
+      }, 'image/jpeg', 0.8);
     };
     img.src = reader.result as string;
   };
   reader.readAsDataURL(file);
 }
 
-function removeAvatar() {
-  profile.removeAvatar();
-  toast.push('info', t('profile_remove_avatar'));
+async function removeAvatar() {
+  if (!auth.user) return;
+  try {
+    await deleteProfileAvatar(auth.user);
+    profile.removeAvatar();
+    toast.push('info', t('profile_remove_avatar'));
+  } catch {
+    toast.push('error', t('profile_avatar_upload_failed'), 4200);
+  }
 }
 
 function save() {

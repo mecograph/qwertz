@@ -5,10 +5,7 @@
       <h2 class="text-sm font-bold text-terminal-amber">{{ t('settings_import_data') }}</h2>
       <p class="mt-2 text-xs text-terminal-muted">{{ t('settings_import_desc') }}</p>
       <div class="mt-3 flex flex-wrap gap-2">
-        <label class="term-btn cursor-pointer">
-          {{ t('settings_upload_xlsx') }}
-          <input class="hidden" type="file" accept=".csv,.xlsx" @change="onUploadMore" />
-        </label>
+        <button class="term-btn" @click="triggerUploadMore">{{ t('settings_upload_xlsx') }}</button>
         <button class="term-btn" @click="$emit('import-json-more')">{{ t('settings_import_json') }}</button>
       </div>
     </div>
@@ -225,11 +222,20 @@ function formatHistoryDate(ts: number) {
   return new Date(ts).toLocaleDateString(loc, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function onUploadMore(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  emit('upload-more', file);
-  refreshAnalytics();
+function triggerUploadMore() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv,.xlsx';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    emit('upload-more', file);
+    refreshAnalytics();
+    document.body.removeChild(input);
+  };
+  input.click();
 }
 
 function exportJson() {
