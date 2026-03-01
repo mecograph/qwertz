@@ -65,22 +65,22 @@
                 <div class="flex justify-end gap-2">
                   <button
                     v-if="record.hasEncryptedOriginal && record.status !== 'reverted'"
-                    class="term-btn px-2 py-1 text-[11px]"
+                    class="term-btn px-2 py-1 text-xs"
                     @click="downloadOriginal(record.id)"
                   >{{ t('settings_download_original') }}</button>
                   <button
                     v-if="record.hasEncryptedOriginal && record.status === 'processed'"
-                    class="term-btn px-2 py-1 text-[11px]"
+                    class="term-btn px-2 py-1 text-xs"
                     @click="openDiff(record.id)"
                   >{{ t('settings_compare') }}</button>
                   <button
                     v-if="record.status !== 'reverted'"
-                    class="term-btn px-2 py-1 text-[11px] text-terminal-red"
+                    class="term-btn px-2 py-1 text-xs text-terminal-red"
                     @click="confirmRevert(record.id)"
                   >{{ t('settings_revert') }}</button>
                   <button
                     v-if="!record.extensionUsed"
-                    class="term-btn px-2 py-1 text-[11px]"
+                    class="term-btn px-2 py-1 text-xs"
                     @click="extendRetention(record.id)"
                   >{{ t('settings_extend_retention') }}</button>
                 </div>

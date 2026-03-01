@@ -299,6 +299,7 @@ function onImportJson() {
         await writeImportEvent(auth.user, importId, { type: 'upload' });
       }
       mappingDone.value = true;
+      ui.setTab('Dashboard');
       recordImport(file.size);
       toast.push('success', `${t('feedback_json_import_complete')}: ${file.name}`);
       notifications.add(t('feedback_json_import_complete'), `${file.name} ${t('feedback_json_import_complete_desc')}`, 'success');
@@ -333,6 +334,7 @@ async function applyMapping() {
       await writeImportEvent(auth.user, currentImportId.value, { type: 'transform' });
     }
     mappingDone.value = true;
+    ui.setTab('Dashboard');
     toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
     notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');
     opsLog.add('info', 'mapping.applied', String(result.valid.length));

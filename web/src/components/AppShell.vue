@@ -1,8 +1,8 @@
 <template>
   <div class="h-dvh overflow-hidden bg-terminal-bg text-terminal-green" :class="ui.theme === 'dark' ? 'scanlines font-mono' : 'font-sans'">
-    <!-- Splash mode: no chrome, centered content -->
-    <template v-if="mode === 'splash'">
-      <div class="flex h-full items-center justify-center p-4 pb-20 lg:pb-4">
+    <!-- Unauthenticated splash: no chrome, full-screen centered -->
+    <template v-if="mode === 'splash' && !auth.isAuthenticated">
+      <div class="flex h-full items-center justify-center p-4">
         <slot />
       </div>
     </template>
@@ -10,9 +10,8 @@
     <!-- Wizard / App mode: structured layout -->
     <template v-else>
       <div class="flex h-full">
-        <!-- Desktop sidebar (app mode only) -->
+        <!-- Desktop sidebar -->
         <aside
-          v-if="mode === 'app'"
           class="hidden h-dvh shrink-0 border-r border-terminal-border bg-terminal-surface transition-[width] duration-200 lg:flex lg:flex-col"
           :class="ui.sidebarCollapsed ? 'w-[52px]' : 'w-60'"
         >
@@ -38,9 +37,10 @@
               :key="item.key"
               class="flex w-full items-center gap-3 rounded px-3 py-2 text-left text-sm transition-colors"
               :class="[
-                ui.tab === item.key ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green',
+                isTabDisabled(item.key) ? 'opacity-30 pointer-events-none' : ui.tab === item.key ? 'bg-terminal-green-dim text-terminal-green' : 'text-terminal-muted hover:text-terminal-green',
                 ui.sidebarCollapsed ? 'justify-center px-0' : '',
               ]"
+              :disabled="isTabDisabled(item.key)"
               :title="ui.sidebarCollapsed ? item.label : undefined"
               @click="ui.setTab(item.key)"
             >
@@ -65,21 +65,28 @@
               <span v-if="!ui.sidebarCollapsed">{{ t('nav_settings') }}</span>
             </button>
 
-            <!-- Theme toggle (vertical) -->
+            <!-- Theme toggle (horizontal) -->
             <div
               class="flex w-full items-center gap-3 rounded px-3 py-2"
               :class="ui.sidebarCollapsed ? 'justify-center px-0' : ''"
             >
               <button
-                class="relative flex shrink-0 flex-col items-center border border-terminal-border transition-all duration-200"
-                :class="ui.theme === 'light' ? 'bg-terminal-green-dim' : 'bg-terminal-surface'"
+                class="relative flex shrink-0 border border-terminal-border transition-all duration-200"
+                :class="[
+                  ui.theme === 'light' ? 'bg-terminal-green-dim' : 'bg-terminal-surface',
+                  ui.sidebarCollapsed ? 'flex-col items-center' : 'items-center',
+                ]"
                 :title="ui.theme === 'dark' ? t('settings_light') : t('settings_dark')"
-                :style="{ width: '28px', height: '48px', padding: '4px', borderRadius: ui.theme === 'light' ? '9999px' : '0' }"
+                :style="ui.sidebarCollapsed
+                  ? { width: '28px', height: '48px', padding: '4px', borderRadius: ui.theme === 'light' ? '9999px' : '0' }
+                  : { width: '48px', height: '28px', padding: '4px', borderRadius: ui.theme === 'light' ? '9999px' : '0' }"
                 @click="ui.setTheme(ui.theme === 'dark' ? 'light' : 'dark')"
               >
                 <span
                   class="flex items-center justify-center bg-terminal-green text-terminal-bg transition-all duration-200"
-                  :class="ui.theme === 'light' ? 'translate-y-5' : 'translate-y-0'"
+                  :class="ui.sidebarCollapsed
+                    ? (ui.theme === 'light' ? 'translate-y-5' : 'translate-y-0')
+                    : (ui.theme === 'light' ? 'translate-x-5' : 'translate-x-0')"
                   :style="{ width: '20px', height: '20px', borderRadius: ui.theme === 'light' ? '9999px' : '0' }"
                 >
                   <AppIcon :name="ui.theme === 'dark' ? 'moon' : 'sun'" :size="12" />
@@ -166,8 +173,8 @@
             <div class="flex h-full w-full items-center justify-between gap-3 px-4">
               <div class="shrink-0">
                 <h1 class="text-base font-bold">
-                  <template v-if="ui.theme === 'dark'">$ {{ currentTabLabel.toLowerCase() }}<span class="cursor-blink"></span></template>
-                  <template v-else>{{ currentTabLabel }}</template>
+                  <template v-if="ui.theme === 'dark'">$ {{ (mode === 'splash' ? t('app_title') : currentTabLabel).toLowerCase() }}<span class="cursor-blink"></span></template>
+                  <template v-else>{{ mode === 'splash' ? t('app_title') : currentTabLabel }}</template>
                 </h1>
               </div>
               <div v-if="mode === 'app'" class="min-w-0 flex flex-1 items-center justify-end gap-2">
@@ -179,7 +186,7 @@
             </div>
           </header>
 
-          <main class="min-h-0 min-w-0 flex-1 overflow-hidden bg-terminal-bg p-4" :class="mode === 'app' ? 'lg:pb-4' : ''">
+          <main class="min-h-0 min-w-0 flex-1 overflow-hidden bg-terminal-bg p-4" :class="mode === 'splash' ? 'flex items-center justify-center pb-20 lg:pb-4' : mode === 'app' ? 'lg:pb-4' : ''">
             <slot />
           </main>
         </div>
@@ -198,12 +205,14 @@
       <button
         v-for="item in allTabs"
         :key="item.key"
-        class="flex flex-1 flex-col items-center gap-0.5 py-2"
-        :class="ui.tab === item.key ? 'text-terminal-green' : 'text-terminal-muted'"
+        class="relative flex flex-1 flex-col items-center gap-0.5 py-2"
+        :class="isTabDisabled(item.key) ? 'opacity-30 pointer-events-none' : ui.tab === item.key ? 'text-terminal-green' : 'text-terminal-muted'"
+        :disabled="isTabDisabled(item.key)"
         @click="ui.setTab(item.key)"
       >
-        <AppIcon :name="item.icon" :size="20" />
-        <span class="text-[10px]">{{ item.label }}</span>
+        <div v-if="ui.tab === item.key && ui.theme === 'light'" class="absolute top-2 left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-terminal-cyan/20"></div>
+        <AppIcon :name="item.icon" :size="20" class="relative" />
+        <span class="text-[10px] relative">{{ item.label }}</span>
       </button>
       <button
         class="flex flex-1 flex-col items-center gap-0.5 py-2 text-terminal-muted"
@@ -227,9 +236,11 @@ import { useClickOutside } from '../composables/useClickOutside';
 import NotificationCenter from './NotificationCenter.vue';
 import AppIcon from './AppIcon.vue';
 
-defineProps<{
+const props = defineProps<{
   mode: 'splash' | 'wizard' | 'app';
 }>();
+
+const isTabDisabled = (key: string) => props.mode !== 'app' && (key === 'Charts' || key === 'Data');
 
 const ui = useUiStore();
 const auth = useAuthStore();

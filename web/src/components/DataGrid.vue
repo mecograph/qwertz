@@ -1,10 +1,10 @@
 <template>
   <section class="flex h-full min-h-0 flex-col term-pane">
-    <div class="flex items-center justify-between gap-3">
+    <div class="space-y-2 lg:flex lg:items-center lg:justify-between lg:gap-3 lg:space-y-0">
       <h2 class="text-sm font-bold">$ data</h2>
       <input
         v-model="search"
-        class="term-input w-72"
+        class="term-input w-full border-0 border-b bg-transparent px-0 lg:w-72 lg:border lg:bg-terminal-bg lg:px-3"
         :placeholder="t('data_search_placeholder')"
         aria-label="Search transactions"
       />

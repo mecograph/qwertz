@@ -5,10 +5,10 @@
       <p class="mt-1 text-xs text-terminal-muted">{{ t('charts_desc') }}</p>
     </div>
 
-    <div class="grid gap-3 md:grid-cols-5">
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
       <div class="term-stat" v-for="kpi in kpis" :key="kpi.label">
         <p class="text-xs text-terminal-muted">{{ kpi.label }}</p>
-        <p class="font-mono text-lg font-bold">{{ kpi.value }}</p>
+        <p class="font-mono text-base font-bold">{{ kpi.value }}</p>
       </div>
     </div>
 
@@ -154,7 +154,6 @@ const kpis = computed(() => {
     { label: t('kpi_expenses'), value: formatCurrency(expense) },
     { label: t('kpi_net'), value: formatCurrency(income - expense) },
     { label: t('kpi_transactions'), value: String(filteredRows.value.length) },
-    { label: t('kpi_top_category'), value: topCategory(filteredRows.value) || '-' },
   ];
 });
 

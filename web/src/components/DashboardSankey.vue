@@ -5,7 +5,7 @@
       <p class="text-xs text-terminal-muted">{{ t('dashboard_desc') }}</p>
     </div>
 
-    <div class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+    <div class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
       <div class="term-stat" v-for="item in kpisList" :key="item.label">
         <p class="text-xs text-terminal-muted">{{ item.label }}</p>
         <p class="font-bold" :class="item.tone">{{ item.value }}</p>
@@ -59,11 +59,6 @@ const kpisList = computed(() => [
   { label: t('kpi_expenses'), value: formatCurrency(kpis.value.expenses), tone: 'text-terminal-red' },
   { label: t('kpi_net'), value: formatCurrency(kpis.value.net), tone: kpis.value.net >= 0 ? 'text-terminal-green' : 'text-terminal-red' },
   { label: t('kpi_transactions'), value: String(kpis.value.txCount), tone: 'text-terminal-amber' },
-  {
-    label: selectedCategory.value ? `${t('kpi_drilldown')} (${drillType.value})` : t('kpi_top_category'),
-    value: selectedCategory.value || kpis.value.topCategory,
-    tone: 'text-terminal-cyan',
-  },
 ]);
 
 const option = computed(() => {

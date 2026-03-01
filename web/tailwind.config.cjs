@@ -10,7 +10,7 @@ module.exports = {
       xl: '0',
       '2xl': '0',
       '3xl': '0',
-      full: '0',
+      full: '9999px',
     },
     extend: {
       fontFamily: {

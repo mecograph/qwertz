@@ -6,7 +6,7 @@
    | | |  /  / _ \| .` |/ _ \| |_\ V / / /  | _||   /
    |_| |_/\_\/_/ \_\_|\_/_/ \_\____|_| /___| |___|_|_\
     </pre>
-    <h1 class="mt-4 text-xl font-bold">
+    <h1 class="mt-4 text-base font-bold">
       <span>{{ displayed }}</span><span v-if="!done" class="cursor-blink"></span>
     </h1>
     <p class="mt-2 text-terminal-muted">{{ t('splash_tagline') }}</p>

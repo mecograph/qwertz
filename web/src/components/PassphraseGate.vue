@@ -33,7 +33,7 @@
       </button>
     </div>
 
-    <div class="mt-3 text-[11px] text-terminal-muted">
+    <div class="mt-3 text-xs text-terminal-muted">
       <button class="underline hover:text-terminal-green" @click="$emit('purge')">
         {{ t('passphrase_forgot_link') }}
       </button>

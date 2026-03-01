@@ -48,7 +48,7 @@
       </div>
 
       <p v-if="inlineError" class="mt-3 text-xs text-terminal-red">{{ inlineError }}</p>
-      <p class="mt-3 text-[11px] text-terminal-muted">{{ auth.providerMode === 'firebase' ? t('auth_firebase_scaffold_notice') : t('auth_mock_notice') }}</p>
+      <p class="mt-3 text-xs text-terminal-muted">{{ auth.providerMode === 'firebase' ? t('auth_firebase_scaffold_notice') : t('auth_mock_notice') }}</p>
     </template>
 
     <!-- Theme toggle + Language switcher -->
