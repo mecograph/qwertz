@@ -1,0 +1,26 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Restrict uploads to encrypted import blobs.
+    match /users/{uid}/imports/{importId}/{fileName} {
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && fileName.matches('.*\\.enc\\.json$')
+        && request.resource.size < 55 * 1024 * 1024
+        && request.resource.contentType == 'application/json';
+      allow update: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
