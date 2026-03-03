@@ -95,6 +95,7 @@ import { useAuthStore } from './stores/useAuthStore';
 import { normalizeRows } from './utils/validator';
 import { useImportHistory } from './composables/useImportHistory';
 import { useLocale } from './composables/useLocale';
+import { useLocaleStore } from './stores/useLocaleStore';
 import { useToastStore } from './stores/useToastStore';
 import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
@@ -115,6 +116,7 @@ const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
 const cryptoGate = useCryptoGate();
 const profile = useProfileStore();
+const localeStore = useLocaleStore();
 const { t } = useLocale();
 const mappingDone = ref(tx.rows.length > 0);
 const showLoading = ref(auth.initializing);
@@ -122,7 +124,7 @@ const loadingFadingOut = ref(false);
 const currentImportId = ref<string | undefined>();
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
-mappingStore.setProfileScope(auth.user?.uid ?? 'anon');
+mappingStore.loadProfile(auth.user);
 
 const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
   if (auth.initializing) return 'splash';
@@ -183,7 +185,7 @@ onUnmounted(() => {
 });
 
 watch(() => auth.user?.uid, async () => {
-  mappingStore.setProfileScope(auth.user?.uid ?? 'anon');
+  mappingStore.loadProfile(auth.user);
   notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
@@ -225,7 +227,7 @@ async function onUpload(file: File) {
     ui.processing = true;
     const encryptedOriginal = await encryptAndStoreOriginal(auth.user, file);
     await importStore.importFile(file);
-    mappingStore.autoSuggest(importStore.headers);
+    mappingStore.autoSuggest(importStore.headers, importStore.rows.slice(0, 5), localeStore.lang);
     mappingDone.value = false;
     recordImport(file.size);
     const importId = await importHistory.add(file.name, importStore.rows.length, {
@@ -321,6 +323,7 @@ function onImportJson() {
 async function applyMapping() {
   try {
     ui.processing = true;
+    mappingStore.trackQuality(mappingStore.suggestions, mappingStore.mapping);
     mappingStore.learnFromConfirmedMapping(importStore.headers);
     const result = normalizeRows(importStore.rows, mappingStore.mapping);
     mappingStore.setIssues(result.issues);
