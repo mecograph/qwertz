@@ -1,5 +1,4 @@
 import { doc, setDoc, getDoc, increment } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
 import { getFirebaseFirestore, getFirebaseFunctions } from './firebaseApp';
 import type { AuthUser } from '../stores/useAuthStore';
 import type {
@@ -269,7 +268,8 @@ const firebaseClient: MappingProfileClient = {
   async aiSuggestMapping(user, request) {
     if (!user) return { suggestions: {} };
     try {
-      const functions = getFirebaseFunctions();
+      const { httpsCallable } = await import('firebase/functions');
+      const functions = await getFirebaseFunctions();
       const callable = httpsCallable<AiMappingSuggestRequest, AiMappingSuggestResponse>(
         functions,
         'suggestMapping',
