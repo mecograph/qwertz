@@ -6,10 +6,11 @@ export function useClickOutside(
 ) {
   function onClick(event: MouseEvent) {
     const el = target.value;
-    if (!el || el === event.target || el.contains(event.target as Node)) return;
+    if (!el) return;
+    if (event.composedPath().includes(el)) return;
     handler();
   }
 
-  onMounted(() => document.addEventListener('pointerdown', onClick, true));
-  onUnmounted(() => document.removeEventListener('pointerdown', onClick, true));
+  onMounted(() => document.addEventListener('click', onClick));
+  onUnmounted(() => document.removeEventListener('click', onClick));
 }
