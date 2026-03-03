@@ -44,6 +44,7 @@
         <MappingWizard
           :headers="importStore.headers"
           :mapping="mappingStore.mapping"
+          :suggestions="mappingStore.suggestions"
           @set="mappingStore.setField"
         />
         <ValidationReview :issues="mappingStore.issues" :valid-count="validRows.length" />
@@ -121,6 +122,8 @@ const loadingFadingOut = ref(false);
 const currentImportId = ref<string | undefined>();
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
+mappingStore.setProfileScope(auth.user?.uid ?? 'anon');
+
 const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
   if (auth.initializing) return 'splash';
   if (!auth.isAuthenticated) return 'splash';
@@ -180,6 +183,7 @@ onUnmounted(() => {
 });
 
 watch(() => auth.user?.uid, async () => {
+  mappingStore.setProfileScope(auth.user?.uid ?? 'anon');
   notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
@@ -317,8 +321,15 @@ function onImportJson() {
 async function applyMapping() {
   try {
     ui.processing = true;
+    mappingStore.learnFromConfirmedMapping(importStore.headers);
     const result = normalizeRows(importStore.rows, mappingStore.mapping);
     mappingStore.setIssues(result.issues);
+    if (result.issues.length > 0) {
+      toast.push('warning', `${result.issues.length} ${t('feedback_mapping_issues')}`, 4200);
+      notifications.add(t('feedback_mapping_issues'), `${result.issues.length} ${t('feedback_mapping_issues_desc')}`, 'warning');
+      opsLog.add('warning', 'mapping.blocked_by_issues', String(result.issues.length));
+      return;
+    }
     const taggedRows = result.valid.map((r) => ({ ...r, importId: currentImportId.value }));
     if (tx.rows.length > 0) {
       tx.addRows(taggedRows);
@@ -338,11 +349,6 @@ async function applyMapping() {
     toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
     notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');
     opsLog.add('info', 'mapping.applied', String(result.valid.length));
-    if (result.issues.length > 0) {
-      toast.push('warning', `${result.issues.length} ${t('feedback_mapping_issues')}`, 4200);
-      notifications.add(t('feedback_mapping_issues'), `${result.issues.length} ${t('feedback_mapping_issues_desc')}`, 'warning');
-      opsLog.add('warning', 'mapping.issues', String(result.issues.length));
-    }
   } catch (error) {
     const appError = toAppError(error, 'Failed to apply mapping.');
     toast.push('error', appError.message, 4200);

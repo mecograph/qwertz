@@ -26,6 +26,15 @@ export interface MappingConfig {
   purpose?: string;
 }
 
+export type MappingField = keyof MappingConfig;
+
+export interface MappingFieldSuggestion {
+  field: MappingField;
+  header?: string;
+  confidence: number;
+  reasons: string[];
+}
+
 export type ImportEventType = 'upload' | 'parse' | 'transform' | 'revert' | 'download';
 
 export interface ImportEvent {

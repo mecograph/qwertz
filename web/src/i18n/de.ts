@@ -29,6 +29,7 @@ export const de: Record<TranslationKey, string> = {
   mapping_label: 'Bezeichnung',
   mapping_amount: 'Betrag',
   mapping_purpose: 'Verwendungszweck',
+  mapping_confidence: 'Sicherheit',
   mapping_not_mapped: 'Nicht zugeordnet',
 
   // ValidationReview

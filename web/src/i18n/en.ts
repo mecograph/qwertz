@@ -27,6 +27,7 @@ export const en = {
   mapping_label: 'Label (Bezeichnung)',
   mapping_amount: 'Amount',
   mapping_purpose: 'Purpose',
+  mapping_confidence: 'Confidence',
   mapping_not_mapped: 'Not mapped',
 
   // ValidationReview
