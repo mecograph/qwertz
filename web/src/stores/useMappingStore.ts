@@ -17,8 +17,18 @@ import {
   buildSourceFingerprint,
   normalizeHeader,
 } from '../utils/mappingSuggestions';
-import { mappingProfileClient } from '../services/mappingProfileClient';
 import type { AuthUser } from './useAuthStore';
+
+// Lazy-load to avoid blocking store module evaluation if the service
+// module has a transient import-resolution issue in Vite dev mode.
+let _client: typeof import('../services/mappingProfileClient')['mappingProfileClient'] | null = null;
+async function getClient() {
+  if (!_client) {
+    const mod = await import('../services/mappingProfileClient');
+    _client = mod.mappingProfileClient;
+  }
+  return _client;
+}
 
 export const useMappingStore = defineStore('mapping', {
   state: () => ({
@@ -42,7 +52,8 @@ export const useMappingStore = defineStore('mapping', {
       if (this.profileLoading) return;
       this.profileLoading = true;
       try {
-        this.profile = await mappingProfileClient.getProfile(user);
+        const c = await getClient();
+        this.profile = await c.getProfile(user);
         this.profileLoaded = true;
       } catch {
         this.profile = emptyProfile();
@@ -52,9 +63,14 @@ export const useMappingStore = defineStore('mapping', {
       }
     },
 
-    persistDelta(delta: MappingProfileDelta) {
+    async persistDelta(delta: MappingProfileDelta) {
       // Fire-and-forget async save
-      mappingProfileClient.updateProfileDelta(this.activeUser, delta).catch(() => {});
+      try {
+        const c = await getClient();
+        await c.updateProfileDelta(this.activeUser, delta);
+      } catch {
+        // ignore persistence errors
+      }
     },
 
     autoSuggest(headers: string[], sampleRows: Record<string, string>[] = [], locale?: string) {
@@ -74,8 +90,9 @@ export const useMappingStore = defineStore('mapping', {
 
     async requestAiAssist(headers: string[], sampleRows: Record<string, string>[] = [], locale?: string) {
       try {
+        const c = await getClient();
         const historicalContext = buildAiHistoricalContext(headers, this.profile);
-        const aiResponse = await mappingProfileClient.aiSuggestMapping(this.activeUser, {
+        const aiResponse = await c.aiSuggestMapping(this.activeUser, {
           headers,
           sampleRows: sampleRows.slice(0, 5),
           locale,
@@ -106,7 +123,7 @@ export const useMappingStore = defineStore('mapping', {
       }
     },
 
-    setField(field: keyof MappingConfig, value: string) {
+    async setField(field: keyof MappingConfig, value: string) {
       const existing = this.suggestions[field];
       if (existing?.header && existing.header !== value && this.currentHeaders.length > 0) {
         const { updatedProfile, delta } = registerNegativeMappingSignal(
@@ -120,7 +137,8 @@ export const useMappingStore = defineStore('mapping', {
 
         // Record import_correction feedback
         const sourceFingerprint = buildSourceFingerprint(this.currentHeaders);
-        mappingProfileClient.recordFeedback(this.activeUser, {
+        const c = await getClient();
+        c.recordFeedback(this.activeUser, {
           type: 'import_correction',
           field,
           header: normalizeHeader(existing.header),
@@ -140,7 +158,7 @@ export const useMappingStore = defineStore('mapping', {
       };
     },
 
-    learnFromConfirmedMapping(headers: string[]) {
+    async learnFromConfirmedMapping(headers: string[]) {
       const { updatedProfile, delta } = learnMappings(this.mapping, headers, this.profile);
       this.profile = updatedProfile;
       this.persistDelta(delta);
@@ -148,10 +166,11 @@ export const useMappingStore = defineStore('mapping', {
       // Record import_confirm feedback for each mapped field
       const sourceFingerprint = buildSourceFingerprint(headers);
       const fields: MappingField[] = ['date', 'category', 'label', 'amount', 'purpose'];
+      const c = await getClient();
       for (const field of fields) {
         const header = this.mapping[field];
         if (!header) continue;
-        mappingProfileClient.recordFeedback(this.activeUser, {
+        c.recordFeedback(this.activeUser, {
           type: 'import_confirm',
           field,
           header: normalizeHeader(header),
@@ -199,12 +218,13 @@ export const useMappingStore = defineStore('mapping', {
       this.persistDelta(delta);
     },
 
-    recordGridCorrection(field: MappingField, oldValue: string, newValue: string) {
+    async recordGridCorrection(field: MappingField, oldValue: string, newValue: string) {
       if (!this.currentHeaders.length) return;
       const sourceFingerprint = buildSourceFingerprint(this.currentHeaders);
       const header = this.mapping[field] ?? '';
 
-      mappingProfileClient.recordFeedback(this.activeUser, {
+      const c = await getClient();
+      c.recordFeedback(this.activeUser, {
         type: 'grid_correction',
         field,
         header: normalizeHeader(header),
