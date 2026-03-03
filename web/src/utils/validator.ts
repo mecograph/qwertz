@@ -72,7 +72,6 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
 
     if (!date) reasons.push('Invalid date');
     if (!Number.isFinite(amount)) reasons.push('Invalid amount');
-    if (!purpose) reasons.push('Purpose is empty');
     if (!category) reasons.push('Category is empty');
     if (!label) reasons.push('Label is empty');
 
