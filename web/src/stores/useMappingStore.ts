@@ -6,7 +6,6 @@ import type {
   MappingProfile,
   MappingProfileDelta,
   ValidationIssue,
-  ConfidenceBucket,
 } from '../types';
 import {
   suggestMappings,
@@ -30,7 +29,7 @@ export const useMappingStore = defineStore('mapping', {
     profileLoading: false,
     currentHeaders: [] as string[],
     issues: [] as ValidationIssue[],
-    _user: null as AuthUser | null,
+    activeUser: null as AuthUser | null,
   }),
   getters: {
     isComplete: (state) => Boolean(
@@ -39,7 +38,7 @@ export const useMappingStore = defineStore('mapping', {
   },
   actions: {
     async loadProfile(user: AuthUser | null) {
-      this._user = user;
+      this.activeUser = user;
       if (this.profileLoading) return;
       this.profileLoading = true;
       try {
@@ -55,7 +54,7 @@ export const useMappingStore = defineStore('mapping', {
 
     persistDelta(delta: MappingProfileDelta) {
       // Fire-and-forget async save
-      mappingProfileClient.updateProfileDelta(this._user, delta).catch(() => {});
+      mappingProfileClient.updateProfileDelta(this.activeUser, delta).catch(() => {});
     },
 
     autoSuggest(headers: string[], sampleRows: Record<string, string>[] = [], locale?: string) {
@@ -69,14 +68,14 @@ export const useMappingStore = defineStore('mapping', {
         (s) => s && classifyConfidence(s.confidence) === 'low',
       );
       if (hasLowConfidence) {
-        this._triggerAiAssist(headers, sampleRows, locale);
+        this.requestAiAssist(headers, sampleRows, locale);
       }
     },
 
-    async _triggerAiAssist(headers: string[], sampleRows: Record<string, string>[] = [], locale?: string) {
+    async requestAiAssist(headers: string[], sampleRows: Record<string, string>[] = [], locale?: string) {
       try {
         const historicalContext = buildAiHistoricalContext(headers, this.profile);
-        const aiResponse = await mappingProfileClient.aiSuggestMapping(this._user, {
+        const aiResponse = await mappingProfileClient.aiSuggestMapping(this.activeUser, {
           headers,
           sampleRows: sampleRows.slice(0, 5),
           locale,
@@ -121,7 +120,7 @@ export const useMappingStore = defineStore('mapping', {
 
         // Record import_correction feedback
         const sourceFingerprint = buildSourceFingerprint(this.currentHeaders);
-        mappingProfileClient.recordFeedback(this._user, {
+        mappingProfileClient.recordFeedback(this.activeUser, {
           type: 'import_correction',
           field,
           header: normalizeHeader(existing.header),
@@ -152,7 +151,7 @@ export const useMappingStore = defineStore('mapping', {
       for (const field of fields) {
         const header = this.mapping[field];
         if (!header) continue;
-        mappingProfileClient.recordFeedback(this._user, {
+        mappingProfileClient.recordFeedback(this.activeUser, {
           type: 'import_confirm',
           field,
           header: normalizeHeader(header),
@@ -205,7 +204,7 @@ export const useMappingStore = defineStore('mapping', {
       const sourceFingerprint = buildSourceFingerprint(this.currentHeaders);
       const header = this.mapping[field] ?? '';
 
-      mappingProfileClient.recordFeedback(this._user, {
+      mappingProfileClient.recordFeedback(this.activeUser, {
         type: 'grid_correction',
         field,
         header: normalizeHeader(header),
