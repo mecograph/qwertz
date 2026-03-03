@@ -63,6 +63,7 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
     const reasons: string[] = [];
     const dateRaw = mapping.date ? row[mapping.date] : '';
     const amountRaw = mapping.amount ? row[mapping.amount] : '';
+    const purpose = (mapping.purpose ? row[mapping.purpose] : '').trim();
     const category = (mapping.category ? row[mapping.category] : '').trim();
     const label = (mapping.label ? row[mapping.label] : '').trim();
 
@@ -88,7 +89,7 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
       date: date.toISOString(),
       category,
       label,
-      purpose: mapping.purpose ? row[mapping.purpose] : '',
+      purpose,
       amount,
       month,
       amountAbs,

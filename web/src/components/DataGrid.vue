@@ -174,14 +174,16 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
+import { useMappingStore } from '../stores/useMappingStore';
 import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
-import type { Tx } from '../types';
+import type { Tx, MappingField } from '../types';
 import { useOpsLogStore } from '../stores/useOpsLogStore';
 import AppIcon from './AppIcon.vue';
 
 const tx = useTransactionsStore();
+const mappingStore = useMappingStore();
 const toast = useToastStore();
 const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
@@ -196,6 +198,24 @@ const openMenu = ref<string | null>(null);
 
 const canUndo = computed(() => tx.history.length > 0);
 const canRedo = computed(() => tx.future.length > 0);
+
+// Debounced correction tracking for mapping learning
+const CORRECTION_FIELDS: Set<string> = new Set(['category', 'label']);
+const correctionBuffer = ref<Array<{ field: MappingField; oldValue: string; newValue: string }>>([]);
+let correctionFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+function flushCorrections() {
+  const batch = correctionBuffer.value.splice(0);
+  for (const c of batch) {
+    mappingStore.recordGridCorrection(c.field, c.oldValue, c.newValue);
+  }
+}
+
+function bufferCorrection(field: MappingField, oldValue: string, newValue: string) {
+  correctionBuffer.value.push({ field, oldValue, newValue });
+  if (correctionFlushTimer) clearTimeout(correctionFlushTimer);
+  correctionFlushTimer = setTimeout(flushCorrections, 2000);
+}
 
 const columns = computed<{ key: keyof Tx; label: string }[]>(() => [
   { key: 'date', label: t('col_date') },
@@ -268,6 +288,17 @@ function startEdit(rowId: string, field: string) {
 }
 
 function commitEdit(id: string, key: string, value: string | number) {
+  // Track corrections for mapping learning on imported rows
+  if (CORRECTION_FIELDS.has(key)) {
+    const row = tx.rows.find((r) => r.id === id);
+    if (row?.importId) {
+      const oldValue = String(row[key as keyof Tx] ?? '');
+      const newValue = String(value);
+      if (oldValue !== newValue) {
+        bufferCorrection(key as MappingField, oldValue, newValue);
+      }
+    }
+  }
   tx.editRow(id, { [key]: value } as Partial<Tx>);
   editingCell.value = null;
 }
@@ -318,5 +349,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', onDocClick);
+  if (correctionFlushTimer) clearTimeout(correctionFlushTimer);
+  if (correctionBuffer.value.length > 0) flushCorrections();
 });
 </script>

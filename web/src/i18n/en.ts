@@ -27,7 +27,12 @@ export const en = {
   mapping_label: 'Label (Bezeichnung)',
   mapping_amount: 'Amount',
   mapping_purpose: 'Purpose',
+  mapping_confidence: 'Confidence',
   mapping_not_mapped: 'Not mapped',
+  mapping_ai_assisted: 'AI assisted',
+  mapping_confidence_high: 'High confidence',
+  mapping_confidence_medium: 'Medium confidence',
+  mapping_confidence_low: 'Low confidence',
 
   // ValidationReview
   validation_valid_rows: 'Valid rows',

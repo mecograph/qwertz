@@ -44,6 +44,7 @@
         <MappingWizard
           :headers="importStore.headers"
           :mapping="mappingStore.mapping"
+          :suggestions="mappingStore.suggestions"
           @set="mappingStore.setField"
         />
         <ValidationReview :issues="mappingStore.issues" :valid-count="validRows.length" />
@@ -94,6 +95,7 @@ import { useAuthStore } from './stores/useAuthStore';
 import { normalizeRows } from './utils/validator';
 import { useImportHistory } from './composables/useImportHistory';
 import { useLocale } from './composables/useLocale';
+import { useLocaleStore } from './stores/useLocaleStore';
 import { useToastStore } from './stores/useToastStore';
 import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
@@ -114,12 +116,15 @@ const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
 const cryptoGate = useCryptoGate();
 const profile = useProfileStore();
+const localeStore = useLocaleStore();
 const { t } = useLocale();
 const mappingDone = ref(tx.rows.length > 0);
 const showLoading = ref(auth.initializing);
 const loadingFadingOut = ref(false);
 const currentImportId = ref<string | undefined>();
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
+
+mappingStore.loadProfile(auth.user);
 
 const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
   if (auth.initializing) return 'splash';
@@ -180,6 +185,7 @@ onUnmounted(() => {
 });
 
 watch(() => auth.user?.uid, async () => {
+  mappingStore.loadProfile(auth.user);
   notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
@@ -221,7 +227,7 @@ async function onUpload(file: File) {
     ui.processing = true;
     const encryptedOriginal = await encryptAndStoreOriginal(auth.user, file);
     await importStore.importFile(file);
-    mappingStore.autoSuggest(importStore.headers);
+    mappingStore.autoSuggest(importStore.headers, importStore.rows.slice(0, 5), localeStore.lang);
     mappingDone.value = false;
     recordImport(file.size);
     const importId = await importHistory.add(file.name, importStore.rows.length, {
@@ -317,8 +323,16 @@ function onImportJson() {
 async function applyMapping() {
   try {
     ui.processing = true;
+    mappingStore.trackQuality(mappingStore.suggestions, mappingStore.mapping);
+    mappingStore.learnFromConfirmedMapping(importStore.headers);
     const result = normalizeRows(importStore.rows, mappingStore.mapping);
     mappingStore.setIssues(result.issues);
+    if (result.issues.length > 0) {
+      toast.push('warning', `${result.issues.length} ${t('feedback_mapping_issues')}`, 4200);
+      notifications.add(t('feedback_mapping_issues'), `${result.issues.length} ${t('feedback_mapping_issues_desc')}`, 'warning');
+      opsLog.add('warning', 'mapping.blocked_by_issues', String(result.issues.length));
+      return;
+    }
     const taggedRows = result.valid.map((r) => ({ ...r, importId: currentImportId.value }));
     if (tx.rows.length > 0) {
       tx.addRows(taggedRows);
@@ -338,11 +352,6 @@ async function applyMapping() {
     toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
     notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');
     opsLog.add('info', 'mapping.applied', String(result.valid.length));
-    if (result.issues.length > 0) {
-      toast.push('warning', `${result.issues.length} ${t('feedback_mapping_issues')}`, 4200);
-      notifications.add(t('feedback_mapping_issues'), `${result.issues.length} ${t('feedback_mapping_issues_desc')}`, 'warning');
-      opsLog.add('warning', 'mapping.issues', String(result.issues.length));
-    }
   } catch (error) {
     const appError = toAppError(error, 'Failed to apply mapping.');
     toast.push('error', appError.message, 4200);
