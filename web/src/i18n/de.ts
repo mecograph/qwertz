@@ -31,6 +31,10 @@ export const de: Record<TranslationKey, string> = {
   mapping_purpose: 'Verwendungszweck',
   mapping_confidence: 'Sicherheit',
   mapping_not_mapped: 'Nicht zugeordnet',
+  mapping_ai_assisted: 'KI-unterstützt',
+  mapping_confidence_high: 'Hohe Sicherheit',
+  mapping_confidence_medium: 'Mittlere Sicherheit',
+  mapping_confidence_low: 'Geringe Sicherheit',
 
   // ValidationReview
   validation_valid_rows: 'Gültige Zeilen',
