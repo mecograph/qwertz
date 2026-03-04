@@ -27,6 +27,8 @@ export const en = {
   mapping_label: 'Label (Bezeichnung)',
   mapping_amount: 'Amount',
   mapping_purpose: 'Purpose',
+  mapping_description: 'Description',
+  mapping_description_hint: 'Map a description column to enable automatic categorization',
   mapping_confidence: 'Confidence',
   mapping_not_mapped: 'Not mapped',
   mapping_ai_assisted: 'AI assisted',
@@ -43,6 +45,7 @@ export const en = {
 
   // App.vue
   finish_import: 'Finish import',
+  wizard_change_file: 'Select different file',
 
   // Filter / DatePicker
   filter_date_range: 'Date Range',
@@ -111,6 +114,7 @@ export const en = {
   col_label: 'Label',
   col_purpose: 'Purpose',
   col_amount: 'Amount',
+  col_description: 'Description',
 
   // DataGrid
   data_search_placeholder: '> search...',
@@ -295,6 +299,29 @@ export const en = {
   // Sidebar
   sidebar_collapse: 'Collapse sidebar',
   sidebar_expand: 'Expand sidebar',
+
+  // ReviewWizard
+  review_title: 'Review categorization',
+  review_summary: '{total} rows categorized ({auto}% auto, {review} need review)',
+  review_confirm_high: 'Confirm all high-confidence',
+  review_confirm_all: 'Approve all',
+  review_finish: 'Finish import',
+  review_back: 'Back to mapping',
+  review_source_csv: 'CSV',
+  review_source_rule: 'Rule',
+  review_source_ai: 'AI',
+  review_source_manual: 'Manual',
+  review_confirmed: 'Confirmed',
+  review_edit: 'Edit',
+  review_confirm: 'Confirm',
+  review_ai_running: 'AI categorizing...',
+  review_ai_progress: '{done} / {total}',
+  review_no_category: 'Select category',
+  review_no_label: 'Select subcategory',
+
+  // AI errors
+  ai_error_rate_limit: 'AI service rate limit reached. Suggestions will use rules only — you can retry later.',
+  ai_error_generic: 'AI service unavailable. Suggestions will use rules only.',
 
   // Common
   cancel: 'Cancel',
