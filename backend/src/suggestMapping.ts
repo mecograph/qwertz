@@ -13,7 +13,7 @@ const HistoricalContextItem = z.object({
   header: z.string(),
   historicalMappings: z.array(
     z.object({
-      field: z.enum(['date', 'category', 'label', 'amount', 'purpose']),
+      field: z.enum(['date', 'category', 'label', 'amount', 'purpose', 'description']),
       count: z.number(),
     }),
   ),
@@ -39,6 +39,7 @@ const OutputSchema = z.object({
     label: FieldSuggestion.optional(),
     amount: FieldSuggestion.optional(),
     purpose: FieldSuggestion.optional(),
+    description: FieldSuggestion.optional(),
   }),
 });
 
@@ -74,6 +75,7 @@ Map each header to one of these fields:
 - label: payee or transaction name/description
 - amount: monetary value
 - purpose: transaction memo or reference text
+- description: raw bank transaction text (e.g. Verwendungszweck, Buchungstext)
 
 ${input.locale ? `The data is likely in locale: ${input.locale}` : ''}
 
@@ -94,7 +96,7 @@ Respond in JSON format matching this schema:
 }`;
 
     const { text } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash',
+      model: 'googleai/gemini-2.5-flash',
       prompt,
       config: { temperature: 0.1 },
     });
