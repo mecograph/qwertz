@@ -1,7 +1,7 @@
 <template>
   <AppShell :mode="appMode">
     <template #top-right>
-      <FilterBar v-if="mappingDone" />
+      <FilterBar v-if="categorizationDone" />
     </template>
 
     <div v-if="showLoading" class="flex flex-col items-center justify-center gap-4 py-20">
@@ -48,11 +48,18 @@
           @set="mappingStore.setField"
         />
         <ValidationReview :issues="mappingStore.issues" :valid-count="validRows.length" />
-        <div class="flex lg:justify-end">
+        <div class="flex gap-2 lg:justify-end">
+          <button class="term-btn w-full border-terminal-green/40 text-terminal-green/60 hover:border-terminal-green hover:text-terminal-green lg:w-auto" @click="triggerFileSelect">
+            {{ t('wizard_change_file') }}
+          </button>
           <button class="term-btn w-full disabled:opacity-40 lg:w-auto" :disabled="!mappingStore.isComplete" @click="applyMapping">
             {{ t('finish_import') }}
           </button>
         </div>
+      </div>
+
+      <div v-else-if="!categorizationDone" class="h-full overflow-auto space-y-4 pb-20 lg:pb-0">
+        <ReviewWizard @back="onReviewBack" @finish="finalizeImport" />
       </div>
 
       <template v-else>
@@ -82,6 +89,7 @@ import FilterBar from './components/FilterBar.vue';
 import DashboardSankey from './components/DashboardSankey.vue';
 import ChartsView from './components/ChartsView.vue';
 import DataGrid from './components/DataGrid.vue';
+import ReviewWizard from './components/ReviewWizard.vue';
 import SettingsView from './components/SettingsView.vue';
 import ProfileView from './components/ProfileView.vue';
 import AuthGate from './components/AuthGate.vue';
@@ -89,6 +97,7 @@ import PassphraseGate from './components/PassphraseGate.vue';
 import ToastHost from './components/ToastHost.vue';
 import { useImportStore } from './stores/useImportStore';
 import { useMappingStore } from './stores/useMappingStore';
+import { useCatStore } from './stores/useCatStore';
 import { useTransactionsStore } from './stores/useTransactionsStore';
 import { useUiStore } from './stores/useUiStore';
 import { useAuthStore } from './stores/useAuthStore';
@@ -101,12 +110,13 @@ import { useNotificationStore } from './stores/useNotificationStore';
 import { toAppError } from './utils/appError';
 import { useOpsLogStore } from './stores/useOpsLogStore';
 import { recordImport, validateImport } from './utils/importGuard';
-import { encryptAndStoreOriginal, materializeAnalyticsOverview, writeImportEvent, getProfileAvatarUrl } from './services/backendClient';
+import { encryptAndStoreOriginal, materializeAnalyticsOverview, writeImportEvent } from './services/backendClient';
 import { useCryptoGate } from './composables/useCryptoGate';
 import { useProfileStore } from './stores/useProfileStore';
 
 const importStore = useImportStore();
 const mappingStore = useMappingStore();
+const catStore = useCatStore();
 const tx = useTransactionsStore();
 const ui = useUiStore();
 const auth = useAuthStore();
@@ -119,18 +129,21 @@ const profile = useProfileStore();
 const localeStore = useLocaleStore();
 const { t } = useLocale();
 const mappingDone = ref(tx.rows.length > 0);
+const categorizationDone = ref(tx.rows.length > 0);
 const showLoading = ref(auth.initializing);
 const loadingFadingOut = ref(false);
 const currentImportId = ref<string | undefined>();
 const validRows = computed(() => normalizeRows(importStore.rows, mappingStore.mapping).valid);
 
 mappingStore.loadProfile(auth.user);
+catStore.loadProfile(auth.user);
 
 const appMode = computed<'splash' | 'wizard' | 'app'>(() => {
   if (auth.initializing) return 'splash';
   if (!auth.isAuthenticated) return 'splash';
   if (!importStore.rows.length && !tx.rows.length) return 'splash';
   if (!mappingDone.value) return 'wizard';
+  if (!categorizationDone.value) return 'wizard';
   return 'app';
 });
 
@@ -186,14 +199,13 @@ onUnmounted(() => {
 
 watch(() => auth.user?.uid, async () => {
   mappingStore.loadProfile(auth.user);
+  catStore.loadProfile(auth.user);
   notifications.refresh();
   importHistory.refresh();
   runRetentionSweepWithFeedback();
   syncAnalytics();
-  if (auth.user) {
-    const url = await getProfileAvatarUrl(auth.user);
-    if (url) profile.setAvatar(url);
-  }
+  // Avatar URL is persisted in localStorage by useProfileStore.
+  // No need to eagerly fetch from Storage — it's set when the user uploads.
 });
 
 watch(() => tx.rows, () => {
@@ -320,6 +332,20 @@ function onImportJson() {
   input.click();
 }
 
+function triggerFileSelect() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv,.xlsx';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.onchange = () => {
+    const file = input.files?.[0];
+    if (file) onUpload(file);
+    document.body.removeChild(input);
+  };
+  input.click();
+}
+
 async function applyMapping() {
   try {
     ui.processing = true;
@@ -333,13 +359,62 @@ async function applyMapping() {
       opsLog.add('warning', 'mapping.blocked_by_issues', String(result.issues.length));
       return;
     }
-    const taggedRows = result.valid.map((r) => ({ ...r, importId: currentImportId.value }));
+
+    // Check if categorization is needed (description mapped and some rows lack category)
+    const needsCategorization = result.valid.some((r) => !r.catSource || r.catSource !== 'csv');
+    if (needsCategorization && mappingStore.mapping.description) {
+      // Feed into categorization engine → show review wizard
+      await catStore.categorize(result.valid, localeStore.lang);
+      mappingDone.value = true;
+      // categorizationDone stays false → review wizard shows
+    } else {
+      // All rows have CSV categories or no description column → skip review
+      const taggedRows = result.valid.map((r) => ({ ...r, importId: currentImportId.value }));
+      if (tx.rows.length > 0) {
+        tx.addRows(taggedRows);
+      } else {
+        tx.setRows(taggedRows);
+      }
+      await importHistory.add(importStore.fileName || 'unknown', result.valid.length, {
+        source: 'csv-xlsx',
+        status: 'processed',
+        mappingConfig: { ...mappingStore.mapping },
+      });
+      if (auth.user && currentImportId.value) {
+        await writeImportEvent(auth.user, currentImportId.value, { type: 'transform' });
+      }
+      mappingDone.value = true;
+      categorizationDone.value = true;
+      ui.setTab('Dashboard');
+      toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
+      notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');
+      opsLog.add('info', 'mapping.applied', String(result.valid.length));
+    }
+  } catch (error) {
+    const appError = toAppError(error, 'Failed to apply mapping.');
+    toast.push('error', appError.message, 4200);
+    notifications.add(t('feedback_mapping_failed'), appError.message, 'error');
+    opsLog.add('error', 'mapping.failed', appError.message);
+  } finally {
+    ui.processing = false;
+  }
+}
+
+function onReviewBack() {
+  mappingDone.value = false;
+}
+
+async function finalizeImport() {
+  try {
+    ui.processing = true;
+    const finalRows = await catStore.finalize();
+    const taggedRows = finalRows.map((r) => ({ ...r, importId: currentImportId.value }));
     if (tx.rows.length > 0) {
       tx.addRows(taggedRows);
     } else {
       tx.setRows(taggedRows);
     }
-    await importHistory.add(importStore.fileName || 'unknown', result.valid.length, {
+    await importHistory.add(importStore.fileName || 'unknown', finalRows.length, {
       source: 'csv-xlsx',
       status: 'processed',
       mappingConfig: { ...mappingStore.mapping },
@@ -347,16 +422,15 @@ async function applyMapping() {
     if (auth.user && currentImportId.value) {
       await writeImportEvent(auth.user, currentImportId.value, { type: 'transform' });
     }
-    mappingDone.value = true;
+    categorizationDone.value = true;
     ui.setTab('Dashboard');
-    toast.push('success', `${t('feedback_mapping_applied')}: ${result.valid.length}`);
-    notifications.add(t('feedback_mapping_applied'), `${result.valid.length} ${t('feedback_mapping_applied_desc')}`, 'success');
-    opsLog.add('info', 'mapping.applied', String(result.valid.length));
+    toast.push('success', `${t('feedback_mapping_applied')}: ${finalRows.length}`);
+    notifications.add(t('feedback_mapping_applied'), `${finalRows.length} ${t('feedback_mapping_applied_desc')}`, 'success');
+    opsLog.add('info', 'mapping.applied', String(finalRows.length));
   } catch (error) {
-    const appError = toAppError(error, 'Failed to apply mapping.');
+    const appError = toAppError(error, 'Failed to finalize import.');
     toast.push('error', appError.message, 4200);
-    notifications.add(t('feedback_mapping_failed'), appError.message, 'error');
-    opsLog.add('error', 'mapping.failed', appError.message);
+    opsLog.add('error', 'import.finalize.failed', appError.message);
   } finally {
     ui.processing = false;
   }
