@@ -106,6 +106,11 @@
               <span v-else>{{ item.purpose }}</span>
             </td>
 
+            <!-- Description (read-only) -->
+            <td v-if="hasDescriptions" class="max-w-[200px] truncate whitespace-nowrap px-2 py-1.5 text-terminal-muted" :title="item.description ?? ''">
+              {{ item.description ?? '' }}
+            </td>
+
             <!-- Amount -->
             <td class="whitespace-nowrap px-2 py-1.5 text-right" @click="startEdit(item.id, 'amount')">
               <input
@@ -175,6 +180,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useTransactionsStore } from '../stores/useTransactionsStore';
 import { useMappingStore } from '../stores/useMappingStore';
+import { useCatStore } from '../stores/useCatStore';
 import { useLocale } from '../composables/useLocale';
 import { useToastStore } from '../stores/useToastStore';
 import { useNotificationStore } from '../stores/useNotificationStore';
@@ -184,6 +190,7 @@ import AppIcon from './AppIcon.vue';
 
 const tx = useTransactionsStore();
 const mappingStore = useMappingStore();
+const catStore = useCatStore();
 const toast = useToastStore();
 const notifications = useNotificationStore();
 const opsLog = useOpsLogStore();
@@ -217,20 +224,28 @@ function bufferCorrection(field: MappingField, oldValue: string, newValue: strin
   correctionFlushTimer = setTimeout(flushCorrections, 2000);
 }
 
-const columns = computed<{ key: keyof Tx; label: string }[]>(() => [
-  { key: 'date', label: t('col_date') },
-  { key: 'type', label: t('col_type') },
-  { key: 'category', label: t('col_category') },
-  { key: 'label', label: t('col_label') },
-  { key: 'purpose', label: t('col_purpose') },
-  { key: 'amount', label: t('col_amount') },
-]);
+const hasDescriptions = computed(() => tx.rows.some((r) => r.description));
+
+const columns = computed<{ key: keyof Tx; label: string }[]>(() => {
+  const cols: { key: keyof Tx; label: string }[] = [
+    { key: 'date', label: t('col_date') },
+    { key: 'type', label: t('col_type') },
+    { key: 'category', label: t('col_category') },
+    { key: 'label', label: t('col_label') },
+    { key: 'purpose', label: t('col_purpose') },
+  ];
+  if (hasDescriptions.value) {
+    cols.push({ key: 'description', label: t('col_description') });
+  }
+  cols.push({ key: 'amount', label: t('col_amount') });
+  return cols;
+});
 
 const filteredRows = computed(() => {
   const q = search.value.trim().toLowerCase();
   if (!q) return tx.rows;
   return tx.rows.filter((row) =>
-    [row.category, row.label, row.purpose ?? '', row.type, row.date]
+    [row.category, row.label, row.purpose ?? '', row.type, row.date, row.description ?? '']
       .join(' ')
       .toLowerCase()
       .includes(q),
@@ -288,9 +303,10 @@ function startEdit(rowId: string, field: string) {
 }
 
 function commitEdit(id: string, key: string, value: string | number) {
+  const row = tx.rows.find((r) => r.id === id);
+
   // Track corrections for mapping learning on imported rows
   if (CORRECTION_FIELDS.has(key)) {
-    const row = tx.rows.find((r) => r.id === id);
     if (row?.importId) {
       const oldValue = String(row[key as keyof Tx] ?? '');
       const newValue = String(value);
@@ -299,7 +315,22 @@ function commitEdit(id: string, key: string, value: string | number) {
       }
     }
   }
+
   tx.editRow(id, { [key]: value } as Partial<Tx>);
+
+  // Learn categorization from grid edits on rows with descriptions
+  if (CORRECTION_FIELDS.has(key) && row?.description) {
+    const updated = tx.rows.find((r) => r.id === id);
+    if (updated) {
+      catStore.recordGridCategorization(
+        updated.description!,
+        updated.category,
+        updated.label,
+        updated.purpose ?? '',
+      );
+    }
+  }
+
   editingCell.value = null;
 }
 
