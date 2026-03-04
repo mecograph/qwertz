@@ -17,7 +17,8 @@ const HINTS: Record<MappingField, string[]> = {
   category: ['category', 'kategorie', 'art'],
   label: ['label', 'bezeichnung', 'name', 'payee'],
   amount: ['amount', 'betrag', 'sum'],
-  purpose: ['purpose', 'verwendungszweck', 'memo', 'description', 'buchungstext', 'text'],
+  purpose: ['purpose', 'memo'],
+  description: ['description', 'beschreibung', 'verwendungszweck', 'buchungstext', 'text', 'referenz', 'info'],
 };
 
 const PROFILE_VERSION = 2;
@@ -391,13 +392,17 @@ export function registerNegativeMappingSignal(
   return { updatedProfile: updated, delta };
 }
 
+// Fields sent to the AI mapping suggest endpoint (excludes 'description'
+// which is matched purely by local heuristic hints).
+const AI_MAPPING_FIELDS: MappingField[] = ['date', 'category', 'label', 'amount', 'purpose'];
+
 export function buildAiHistoricalContext(
   headers: string[],
   profile: MappingProfile,
 ): Array<{ header: string; historicalMappings: HistoricalMappingItem[] }> {
   return headers.map((header) => {
     const normalizedHeader = normalizeHeader(header);
-    const historicalMappings = FIELDS
+    const historicalMappings = AI_MAPPING_FIELDS
       .map((field) => {
         const fieldCounters = getFieldCounter(profile.counts, field);
         const total = sumFingerprintCounter(fieldCounters[normalizedHeader] ?? {});
