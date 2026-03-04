@@ -11,6 +11,9 @@ export interface Tx {
   month: string;
   amountAbs: number;
   importId?: string;
+  description?: string;
+  catSource?: 'csv' | 'rule' | 'ai' | 'manual';
+  catConfidence?: number;
 }
 
 export interface ValidationIssue {
@@ -24,6 +27,7 @@ export interface MappingConfig {
   label?: string;
   amount?: string;
   purpose?: string;
+  description?: string;
 }
 
 export type MappingField = keyof MappingConfig;
@@ -98,6 +102,112 @@ export interface AiMappingSuggestRequest {
 
 export interface AiMappingSuggestResponse {
   suggestions: Partial<Record<MappingField, { header: string; score: number; reasoning: string }>>;
+}
+
+// --- Categorization types ---
+
+export interface CatRule {
+  id: string;
+  pattern: string;
+  category: string;
+  label: string;
+  purpose?: string;
+  hitCount: number;
+  source: 'ai' | 'user';
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface CatRuleProfileQuality {
+  totalCategorized: number;
+  ruleHits: number;
+  aiHits: number;
+  corrections: number;
+}
+
+export interface CatRuleProfileAi {
+  batchRuns: number;
+  lastBatchAt: number | null;
+}
+
+export interface SubcategoryDef {
+  id: string;
+  label: Record<string, string>;
+}
+
+export interface CategoryDef {
+  id: string;
+  label: Record<string, string>;
+  type: 'expense' | 'income' | 'neutral';
+  subcategories: SubcategoryDef[];
+}
+
+export interface CatRuleProfile {
+  version: number;
+  updatedAt: number;
+  rules: CatRule[];
+  customCategories: CategoryDef[];
+  quality: CatRuleProfileQuality;
+  ai: CatRuleProfileAi;
+}
+
+export interface CatRuleProfileDelta {
+  rules?: CatRule[];
+  removedRuleIds?: string[];
+  customCategories?: CategoryDef[];
+  quality?: Partial<CatRuleProfileQuality>;
+  ai?: Partial<CatRuleProfileAi>;
+}
+
+export type CatFeedbackType = 'review_confirm' | 'review_correction' | 'grid_correction';
+
+export interface CatFeedbackEvent {
+  id?: string;
+  type: CatFeedbackType;
+  description: string;
+  pattern: string;
+  category: string;
+  label: string;
+  purpose?: string;
+  previousCategory?: string;
+  previousLabel?: string;
+  source: 'rule' | 'ai' | 'csv' | 'manual';
+  createdAt: number;
+}
+
+export interface PendingCategorization {
+  txId: string;
+  description: string;
+  amount: number;
+  date: string;
+  category: string;
+  label: string;
+  purpose: string;
+  confidence: number;
+  source: 'csv' | 'rule' | 'ai' | 'manual';
+  reasoning?: string;
+  reviewed: boolean;
+  edited: boolean;
+}
+
+export interface AiCategorizeBatchRequest {
+  transactions: Array<{ id: string; description: string; amount: number; date: string }>;
+  existingRules: Array<{ pattern: string; category: string; label: string; purpose?: string }>;
+  locale?: string;
+}
+
+export interface AiCategorizeBatchItem {
+  id: string;
+  category: string;
+  label: string;
+  purpose: string;
+  confidence: number;
+  reasoning: string;
+  suggestedPattern: string;
+}
+
+export interface AiCategorizeBatchResponse {
+  results: AiCategorizeBatchItem[];
 }
 
 export type ImportEventType = 'upload' | 'parse' | 'transform' | 'revert' | 'download';
