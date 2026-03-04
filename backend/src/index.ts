@@ -5,3 +5,4 @@ initializeApp();
 export { retentionSweep } from './retention';
 export { checkUploadQuota } from './rateLimits';
 export { suggestMapping } from './suggestMapping';
+export { categorizeBatch } from './categorizeBatch';
