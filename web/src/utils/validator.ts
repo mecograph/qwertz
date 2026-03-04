@@ -59,6 +59,11 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
   const valid: Tx[] = [];
   const issues: ValidationIssue[] = [];
 
+  // Determine whether categorization will fill category/label later
+  const hasCategoryMapping = Boolean(mapping.category);
+  const hasLabelMapping = Boolean(mapping.label);
+  const hasDescriptionMapping = Boolean(mapping.description);
+
   rows.forEach((row, index) => {
     const reasons: string[] = [];
     const dateRaw = mapping.date ? row[mapping.date] : '';
@@ -66,14 +71,19 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
     const purpose = (mapping.purpose ? row[mapping.purpose] : '').trim();
     const category = (mapping.category ? row[mapping.category] : '').trim();
     const label = (mapping.label ? row[mapping.label] : '').trim();
+    const description = (mapping.description ? row[mapping.description] : '').trim();
 
     const date = parseDateValue(dateRaw);
     const amount = parseAmountValue(String(amountRaw));
 
     if (!date) reasons.push('Invalid date');
     if (!Number.isFinite(amount)) reasons.push('Invalid amount');
-    if (!category) reasons.push('Category is empty');
-    if (!label) reasons.push('Label is empty');
+
+    // Only require category/label when there's no description column to feed auto-categorization
+    if (!hasDescriptionMapping) {
+      if (!category && hasCategoryMapping) reasons.push('Category is empty');
+      if (!label && hasLabelMapping) reasons.push('Label is empty');
+    }
 
     if (reasons.length || !date) {
       issues.push({ row: index + 1, reasons });
@@ -82,7 +92,10 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
 
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const amountAbs = Math.abs(amount);
-    const type = category === 'Umbuchung' ? 'Neutral' : amount > 0 ? 'Income' : 'Expense';
+    const type = category === 'Umbuchung' || category === 'transfers' ? 'Neutral' : amount > 0 ? 'Income' : 'Expense';
+
+    // Determine catSource: if category came from CSV mapping, mark as 'csv'
+    const catSource = (hasCategoryMapping && category) ? 'csv' as const : undefined;
 
     valid.push({
       id: crypto.randomUUID(),
@@ -94,6 +107,8 @@ export function normalizeRows(rows: Record<string, string>[], mapping: MappingCo
       month,
       amountAbs,
       type,
+      description: description || undefined,
+      catSource,
     });
   });
 
