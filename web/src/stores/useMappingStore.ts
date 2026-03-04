@@ -39,11 +39,13 @@ export const useMappingStore = defineStore('mapping', {
     profileLoading: false,
     currentHeaders: [] as string[],
     issues: [] as ValidationIssue[],
+    aiError: '' as string,
     activeUser: null as AuthUser | null,
   }),
   getters: {
     isComplete: (state) => Boolean(
-      state.mapping.date && state.mapping.category && state.mapping.label && state.mapping.amount && state.mapping.purpose,
+      state.mapping.date && state.mapping.amount &&
+      (state.mapping.description || (state.mapping.category && state.mapping.label)),
     ),
   },
   actions: {
@@ -80,7 +82,8 @@ export const useMappingStore = defineStore('mapping', {
       this.suggestions = result.suggestions;
 
       // Check if any field has low confidence → trigger AI assist
-      const hasLowConfidence = Object.values(result.suggestions).some(
+      // Skip AI when fewer than 3 headers — likely broken CSV parsing
+      const hasLowConfidence = headers.length >= 3 && Object.values(result.suggestions).some(
         (s) => s && classifyConfidence(s.confidence) === 'low',
       );
       if (hasLowConfidence) {
@@ -118,8 +121,14 @@ export const useMappingStore = defineStore('mapping', {
           };
           this.persistDelta(aiDelta);
         }
-      } catch {
-        // AI failure is non-critical; keep heuristic suggestions
+      } catch (err: any) {
+        // AI failure is non-critical; keep heuristic suggestions but inform user
+        const msg = err?.message ?? '';
+        if (msg.includes('429') || msg.includes('quota') || msg.includes('rate')) {
+          this.aiError = 'rate_limit';
+        } else {
+          this.aiError = 'generic';
+        }
       }
     },
 
@@ -165,7 +174,7 @@ export const useMappingStore = defineStore('mapping', {
 
       // Record import_confirm feedback for each mapped field
       const sourceFingerprint = buildSourceFingerprint(headers);
-      const fields: MappingField[] = ['date', 'category', 'label', 'amount', 'purpose'];
+      const fields: MappingField[] = ['date', 'category', 'label', 'amount', 'purpose', 'description'];
       const c = await getClient();
       for (const field of fields) {
         const header = this.mapping[field];
