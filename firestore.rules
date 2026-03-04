@@ -113,7 +113,24 @@ service cloud.firestore {
         allow read: if isOwner(uid);
         allow create: if isOwner(uid)
           && request.resource.data.type in ['import_confirm', 'import_correction', 'grid_correction']
-          && request.resource.data.field in ['date', 'category', 'label', 'amount', 'purpose']
+          && request.resource.data.field in ['date', 'category', 'label', 'amount', 'purpose', 'description']
+          && request.resource.data.createdAt is int;
+        allow update, delete: if false;
+      }
+
+      match /catRuleProfiles/{profileId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && profileId == 'default'
+          && request.resource.data.version is int
+          && request.resource.data.updatedAt is int;
+        allow update: if isOwner(uid) && profileId == 'default';
+        allow delete: if isOwner(uid);
+      }
+
+      match /catRuleFeedback/{eventId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.type in ['review_confirm', 'review_correction', 'grid_correction']
           && request.resource.data.createdAt is int;
         allow update, delete: if false;
       }
