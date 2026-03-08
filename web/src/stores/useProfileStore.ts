@@ -12,7 +12,7 @@ function loadProfile(): ProfileState {
     const raw = localStorage.getItem(PROFILE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { displayName: parsed.displayName ?? '', avatarUrl: '' };
+      return { displayName: parsed.displayName ?? '', avatarUrl: parsed.avatarUrl ?? '' };
     }
   } catch {
     // ignore
@@ -29,12 +29,14 @@ export const useProfileStore = defineStore('profile', {
     },
     setAvatar(url: string) {
       this.avatarUrl = url;
+      this.persist();
     },
     removeAvatar() {
       this.avatarUrl = '';
+      this.persist();
     },
     persist() {
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ displayName: this.displayName }));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ displayName: this.displayName, avatarUrl: this.avatarUrl }));
     },
   },
 });

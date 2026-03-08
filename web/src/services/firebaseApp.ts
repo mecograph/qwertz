@@ -8,6 +8,7 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let storage: FirebaseStorage | null = null;
+let functions: import('firebase/functions').Functions | null = null;
 
 function getConfig() {
   return {
@@ -54,4 +55,12 @@ export function getFirebaseStorage(): FirebaseStorage {
     storage = getStorage(ensureFirebaseApp());
   }
   return storage;
+}
+
+export async function getFirebaseFunctions(): Promise<import('firebase/functions').Functions> {
+  if (!functions) {
+    const { getFunctions } = await import('firebase/functions');
+    functions = getFunctions(ensureFirebaseApp());
+  }
+  return functions;
 }
