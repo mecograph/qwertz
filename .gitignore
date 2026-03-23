@@ -8,7 +8,15 @@ web/src/**/*.js
 
 # Local env files
 .env.local
+.env.production
 web/.env.local
+web/.env.production
+
+# Claude Code
+.claude/
+
+# Test output
+test-results/
 
 # Monorepo workspace artifacts
 web/node_modules/
