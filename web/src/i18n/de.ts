@@ -29,7 +29,14 @@ export const de: Record<TranslationKey, string> = {
   mapping_label: 'Bezeichnung',
   mapping_amount: 'Betrag',
   mapping_purpose: 'Verwendungszweck',
+  mapping_description: 'Beschreibung',
+  mapping_description_hint: 'Ordne eine Beschreibungsspalte zu, um automatische Kategorisierung zu aktivieren',
+  mapping_confidence: 'Sicherheit',
   mapping_not_mapped: 'Nicht zugeordnet',
+  mapping_ai_assisted: 'KI-unterstützt',
+  mapping_confidence_high: 'Hohe Sicherheit',
+  mapping_confidence_medium: 'Mittlere Sicherheit',
+  mapping_confidence_low: 'Geringe Sicherheit',
 
   // ValidationReview
   validation_valid_rows: 'Gültige Zeilen',
@@ -40,6 +47,7 @@ export const de: Record<TranslationKey, string> = {
 
   // App.vue
   finish_import: 'Import abschließen',
+  wizard_change_file: 'Andere Datei wählen',
 
   // Filter / DatePicker
   filter_date_range: 'Zeitraum',
@@ -108,6 +116,7 @@ export const de: Record<TranslationKey, string> = {
   col_label: 'Bezeichnung',
   col_purpose: 'Verwendungszweck',
   col_amount: 'Betrag',
+  col_description: 'Beschreibung',
 
   // DataGrid
   data_search_placeholder: '> suchen...',
@@ -292,6 +301,29 @@ export const de: Record<TranslationKey, string> = {
   // Sidebar
   sidebar_collapse: 'Seitenleiste einklappen',
   sidebar_expand: 'Seitenleiste ausklappen',
+
+  // ReviewWizard
+  review_title: 'Kategorisierung prüfen',
+  review_summary: '{total} Zeilen kategorisiert ({auto}% automatisch, {review} zur Prüfung)',
+  review_confirm_high: 'Alle mit hoher Sicherheit bestätigen',
+  review_confirm_all: 'Alle genehmigen',
+  review_finish: 'Import abschließen',
+  review_back: 'Zurück zur Zuordnung',
+  review_source_csv: 'CSV',
+  review_source_rule: 'Regel',
+  review_source_ai: 'KI',
+  review_source_manual: 'Manuell',
+  review_confirmed: 'Bestätigt',
+  review_edit: 'Bearbeiten',
+  review_confirm: 'Bestätigen',
+  review_ai_running: 'KI kategorisiert...',
+  review_ai_progress: '{done} / {total}',
+  review_no_category: 'Kategorie wählen',
+  review_no_label: 'Unterkategorie wählen',
+
+  // AI errors
+  ai_error_rate_limit: 'KI-Dienst Ratenlimit erreicht. Vorschläge basieren nur auf Regeln — später erneut versuchen.',
+  ai_error_generic: 'KI-Dienst nicht verfügbar. Vorschläge basieren nur auf Regeln.',
 
   // Common
   cancel: 'Abbrechen',

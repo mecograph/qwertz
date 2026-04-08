@@ -19,6 +19,15 @@ service firebase.storage {
       allow update: if false;
     }
 
+    // Profile avatar – owner can read/write their own avatar.
+    match /users/{uid}/profile/{fileName} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isOwner(uid);
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }
